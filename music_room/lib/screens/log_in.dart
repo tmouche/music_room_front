@@ -24,8 +24,20 @@ class _LogInPageState extends State<LogInPage> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(,
-    )
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(12.0),
+            child: Image.asset(
+              'assets/images/logo.png',
+              width: 80,
+              height: 80,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
 }
