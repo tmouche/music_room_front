@@ -1,0 +1,88 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "music_room",
+            "cwd": "music_room",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "music_room (profile mode)",
+            "cwd": "music_room",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "music_room (release mode)",
+            "cwd": "music_room",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "birdle",
+            "cwd": "firstFlutter/birdle",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "birdle (profile mode)",
+            "cwd": "firstFlutter/birdle",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "birdle (release mode)",
+            "cwd": "firstFlutter/birdle",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "rolodex",
+            "cwd": "firstFlutter/rolodex",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "rolodex (profile mode)",
+            "cwd": "firstFlutter/rolodex",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "rolodex (release mode)",
+            "cwd": "firstFlutter/rolodex",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "wikipedia_reader",
+            "cwd": "firstFlutter/wikipedia_reader",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "wikipedia_reader (profile mode)",
+            "cwd": "firstFlutter/wikipedia_reader",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "wikipedia_reader (release mode)",
+            "cwd": "firstFlutter/wikipedia_reader",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}
