@@ -1,4 +1,6 @@
 class Spacing {
+  const Spacing();
+
   static const xs = 4.0;
   static const sm = 8.0;
   static const md = 16.0;

@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:music_room/app/theme/text_theme.dart';
-import '../app/theme/colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../app/controllers/auth_controller.dart';
 import '../app/theme/spacing.dart';
+import '../app/utils/exception.dart';
 import '../components/widgets/gradient_text.dart';
 
-class LogInPage extends StatefulWidget {
+class LogInPage extends ConsumerStatefulWidget {
   const LogInPage({super.key});
 
   @override
-  State<LogInPage> createState() => _LogInPageState();
+  ConsumerState<LogInPage> createState() => _LogInPageState();
 }
 
-class _LogInPageState extends State<LogInPage> {
+class _LogInPageState extends ConsumerState<LogInPage> {
   bool knowUser = true;
+
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  bool _isLoading = false;
 
   void _onSignInSelected() {
     setState(() {
@@ -26,8 +33,25 @@ class _LogInPageState extends State<LogInPage> {
     });
   }
 
-  void _resetPasswordHandler() {
-    return ;
+  Future<void>  _resetPasswordHandler() async {
+    final String email = _emailController.text.trim();
+
+    if (email.isEmpty) {
+      // Faire vibrer la case Email en la collorant en rouge
+      return ;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      ref.read(authProvider.notifier).forgotPassword(email);
+    } on ApiException catch (e) {
+      return ;
+    } catch (e) {
+      return ;
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _onLogIn() {
@@ -45,8 +69,11 @@ class _LogInPageState extends State<LogInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final appColor = Theme.of(context).colorScheme;
+    final appText = Theme.of(context).textTheme;
+
     return Scaffold(
-      backgroundColor: appColorSheme().surface,
+      backgroundColor: appColor.surface,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -63,15 +90,15 @@ class _LogInPageState extends State<LogInPage> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        appColorSheme().primary,
-                        appColorSheme().secondary,
-                        appColorSheme().tertiary,
+                        appColor.primary,
+                        appColor.secondary,
+                        appColor.tertiary,
                       ]
                     ),
                   ),
                   child: const Icon(Icons.queue_music, size: 38, color: Colors.white),
                 ),
-                const SizedBox(height: Spacing.md),
+                const SizedBox(height: Spacing.sm),
                 GradientText(
                   'Music Room',
                   style: const TextStyle(fontSize: 38, fontWeight: FontWeight.bold),
@@ -79,18 +106,17 @@ class _LogInPageState extends State<LogInPage> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      appColorSheme().primary,
-                      appColorSheme().secondary,
-                      appColorSheme().tertiary,
+                      appColor.primary,
+                      appColor.secondary,
+                      appColor.tertiary,
                     ]
                   )
                 ),
-                const SizedBox(height: Spacing.sm),
                 Text(
                   'Listen Together, Anytime',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: appColorSheme().onSurfaceVariant,
+                    color: appColor.onSurfaceVariant,
                     fontSize: 18,
                   ),
                 ),
@@ -100,152 +126,22 @@ class _LogInPageState extends State<LogInPage> {
                   padding: EdgeInsets.all(Spacing.md),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: appColorSheme().onSurfaceVariant.withValues(alpha: 0.15), width: 1),
+                    border: Border.all(color: appColor.onSurfaceVariant.withValues(alpha: 0.15), width: 1),
                     color: Colors.transparent
                   ),
                   child: Column(
                     children: [
-                      AuthSwith(
+                      AuthSwitch(
                         knowUser: knowUser,
                         onLogin: _onLogInSelected,
                         onSignup: _onSignInSelected
                       ),
-                      if (!knowUser)
-                        SizedBox(
-                          child: Column(
-                            children: [
-                              SizedBox(height: Spacing.md),
-                              SizedBox(
-                                  child: Column(
-                                    children: [
-                                      Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                            'Username',
-                                            style: appTextTheme().titleSmall,
-                                        )
-                                      ),
-                                      SizedBox(height: Spacing.sm),
-                                      SizedBox(
-                                        height: 45,
-                                        child: TextField(
-                                          obscureText: false,
-                                          style: TextStyle(fontSize: 13, color: appColorSheme().onSurfaceVariant),
-                                          cursorColor: appColorSheme().onSurface,
-                                          cursorWidth: 1,
-                                          decoration: InputDecoration(
-                                            prefixIcon: Icon(Icons.person, color: appColorSheme().onSurfaceVariant,),
-                                            filled: true,
-                                            fillColor: appColorSheme().onSurfaceVariant.withValues(alpha: 0.15),
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(15),
-                                            ),
-                                            hintText: 'your_username',
-                                            hintStyle: TextStyle(fontSize: 13),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderSide: BorderSide(width: 2, color: appColorSheme().secondary.withAlpha(150)),
-                                              borderRadius: BorderRadius.circular(15),
-                                            ),
-                                          ),
-                                        )
-                                      )
-                                    ],
-                                  ),
-                              ),
-                            ],
-                          )
-                        ),
                       SizedBox(height: Spacing.md),
-                      SizedBox(
-                          child: Column(
-                            children: [
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                    'Email',
-                                    style: appTextTheme().titleSmall,
-                                )
-                              ),
-                              SizedBox(height: Spacing.sm),
-                              SizedBox(
-                                height: 45,
-                                child: TextField(
-                                  obscureText: false,
-                                  style: TextStyle(fontSize: 13, color: appColorSheme().onSurfaceVariant),
-                                  cursorColor: appColorSheme().onSurface,
-                                  cursorWidth: 1,
-                                  decoration: InputDecoration(
-                                    prefixIcon: Icon(Icons.mail, color: appColorSheme().onSurfaceVariant,),
-                                    filled: true,
-                                    fillColor: appColorSheme().onSurfaceVariant.withValues(alpha: 0.15),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                    hintText: 'your@email.com',
-                                    hintStyle: TextStyle(fontSize: 13),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(width: 2, color: appColorSheme().secondary.withAlpha(150)),
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                  ),
-                                )
-                              )
-                            ],
-                          ),
-                      ),
-                      SizedBox(height: Spacing.md),
-                      SizedBox(
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Password', style: appTextTheme().titleSmall),
-                                if (knowUser)
-                                  SizedBox(
-                                    child: TextButton(
-                                      style: TextButton.styleFrom(
-                                        padding: EdgeInsets.zero,
-                                        minimumSize: Size.zero
-                                      ),
-                                      onPressed: _resetPasswordHandler, 
-                                      child: Text(
-                                        'Forgot Password?',
-                                        style: TextStyle(
-                                          color: appColorSheme().secondary, 
-                                          fontSize: 12,
-                                        )
-                                      )
-                                    )
-                                  )
-                              ],
-                            ),
-                            SizedBox(height: Spacing.sm),
-                            SizedBox(
-                              height: 45,
-                              child: TextField(
-                                obscureText: true,
-                                style: TextStyle(fontSize: 13, color: appColorSheme().onSurfaceVariant),
-                                cursorColor: appColorSheme().onSurface,
-                                cursorWidth: 1,
-                                decoration: InputDecoration(
-                                  prefixIcon: Icon(Icons.lock, color: appColorSheme().onSurfaceVariant,),
-                                  filled: true,
-                                  fillColor: appColorSheme().onSurfaceVariant.withValues(alpha: 0.15),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                  hintText: '•••••••••',
-                                  hintStyle: TextStyle(fontSize: 13),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(width: 2, color: appColorSheme().secondary.withAlpha(150)),
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                ),
-                              )
-                            )
-                          ],
-                        ),
+                      AuthParameters(
+                        knowUser: knowUser,
+                        usernameController: _usernameController,
+                        emailController: _emailController,
+                        passwordController: _passwordController,
                       ),
                       const SizedBox(height: Spacing.xl),
                       Container(
@@ -255,8 +151,8 @@ class _LogInPageState extends State<LogInPage> {
                           borderRadius: BorderRadius.circular(15),
                           gradient: LinearGradient(
                             colors: [
-                              appColorSheme().secondary,
-                              appColorSheme().primary,
+                              appColor.secondary,
+                              appColor.primary,
                             ]
                           ),
                         ),
@@ -265,19 +161,35 @@ class _LogInPageState extends State<LogInPage> {
                           child: Text(
                             knowUser ? 'Log In' : 'Create Account',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 14, color: appColorSheme().onSecondary)
+                            style: TextStyle(fontSize: 14, color: appColor.onSecondary)
                           )
                         )
                       ),
-                      const SizedBox(height: Spacing.md),
+                      const SizedBox(height: Spacing.xs),
+                      if (knowUser)
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero
+                          ),
+                          onPressed: _isLoading ? null : _resetPasswordHandler, 
+                          child: Text(
+                            'Forgot Password?',
+                            style: TextStyle(
+                              color: appColor.secondary, 
+                              fontSize: 12,
+                            )
+                          )
+                        ),
+                      const SizedBox(height: Spacing.md - Spacing.xs),
                       Row(
                         children: [
-                          Expanded(child: Divider(color: appColorSheme().onSurfaceVariant)),
+                          Expanded(child: Divider(color: appColor.onSurfaceVariant)),
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text('OR', style: appTextTheme().bodyMedium),
+                            child: Text('OR', style: appText.bodyMedium),
                           ),
-                          Expanded(child: Divider(color: appColorSheme().onSurfaceVariant)),
+                          Expanded(child: Divider(color: appColor.onSurfaceVariant)),
                         ],
                       ),
                       const SizedBox(height: Spacing.md-Spacing.xs),
@@ -289,7 +201,7 @@ class _LogInPageState extends State<LogInPage> {
                                 height: 45,
                                 margin: EdgeInsets.all(Spacing.xs),
                                 decoration: BoxDecoration(
-                                  color: appColorSheme().onSurfaceVariant.withValues(alpha: 0.15),
+                                  color: appColor.onSurfaceVariant.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(15),
                                   border: Border.all(color: Colors.white30, width: 1),
                                 ),
@@ -300,7 +212,7 @@ class _LogInPageState extends State<LogInPage> {
                                     children: [
                                       Image.asset('assets/images/google.png', height: 18, width: 18,),
                                       const SizedBox(width: 8),
-                                      Text('Google', style: TextStyle(fontSize: 14, color: appColorSheme().onSecondary))
+                                      Text('Google', style: TextStyle(fontSize: 14, color: appColor.onSecondary))
                                     ],
                                   )
                                 ),
@@ -317,7 +229,7 @@ class _LogInPageState extends State<LogInPage> {
                   constraints: BoxConstraints(maxWidth: 300),
                     child: Text(
                       'By continuing, you agree to our Terms & Privacy Policy',
-                      style: appTextTheme().bodySmall,
+                      style: appText.bodySmall,
                       textAlign: TextAlign.center,
                     ),
                   ) 
@@ -328,13 +240,126 @@ class _LogInPageState extends State<LogInPage> {
       ),
     );
   }
-
 }
 
+class AuthParameters extends StatelessWidget {
+  const AuthParameters({
+    super.key,
+    required this.knowUser,
+    required this._usernameController,
+    required this._emailController,
+    required this._passwordController,
+  });
 
+  final bool knowUser;
+  final TextEditingController _usernameController;
+  final TextEditingController _emailController;
+  final TextEditingController _passwordController;
 
-class AuthSwith extends StatelessWidget {
-  const AuthSwith({
+  @override
+  Widget build(BuildContext context) {
+    final appColor = Theme.of(context).colorScheme;
+
+    return Column(
+      spacing: Spacing.md,
+      children: [
+        if (!knowUser)
+          _AuthField(
+            title: 'Username',
+            icon: Icon(Icons.person, color: appColor.onSurfaceVariant,),
+            hint: 'your_username',
+            controller: _usernameController,
+            textInputAction: TextInputAction.next,
+          ),
+        _AuthField(
+          title: 'Email',
+          icon: Icon(Icons.mail, color: appColor.onSurfaceVariant,),
+          hint: 'your@email.com',
+          controller: _emailController,
+          textInputAction: TextInputAction.next,
+          keyboardType: TextInputType.emailAddress,
+        ),
+        _AuthField(
+          title: 'Password',
+          icon: Icon(Icons.lock, color: appColor.onSurfaceVariant,),
+          hint: '•••••••••',
+          controller: _passwordController,
+          textInputAction: TextInputAction.done,
+          obscureText: true,
+        ),     
+      ],
+    );
+  }
+}
+
+class _AuthField extends StatelessWidget {
+  const _AuthField({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.hint,
+    required this.controller,
+    required this.textInputAction,
+    this.obscureText = false,
+    this.keyboardType ,
+  });
+
+  final String title;
+  final Icon icon;
+  final String hint;
+  final TextEditingController controller;
+  final TextInputAction textInputAction;
+  final bool obscureText;
+  final TextInputType? keyboardType;
+
+  @override
+  Widget build(BuildContext context) {
+    final appColor = Theme.of(context).colorScheme;
+    final appText = Theme.of(context).textTheme;
+    
+    return Column(
+      spacing: Spacing.xs,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            title,
+            style: appText.titleSmall,
+          ),
+        ),
+        SizedBox(
+          height: 45,
+          child: TextField(
+            controller: controller,
+            textInputAction: textInputAction,
+            keyboardType: keyboardType,
+            obscureText: obscureText,
+            style: TextStyle(fontSize: 13, color: appColor.onSurfaceVariant),
+            cursorColor: appColor.onSurface,
+            cursorWidth: 1,
+            decoration: InputDecoration(
+              prefixIcon: icon,
+              filled: true,
+              fillColor: appColor.onSurfaceVariant.withValues(alpha: 0.15),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15)
+              ),
+              hintText: hint,
+              hintStyle: TextStyle(fontSize: 13),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(width: 2, color: appColor.secondary.withAlpha(150)),
+                borderRadius: BorderRadius.circular(15),
+              ),
+            ),
+          )
+        )
+      ],
+    );
+  }
+}
+
+class AuthSwitch extends StatelessWidget {
+  const AuthSwitch({
     super.key,
     required this.knowUser,
     required this.onLogin,
@@ -388,6 +413,8 @@ class _SwitchButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appText = Theme.of(context).textTheme;
+
     return Container(
       height: 40,
       margin: const EdgeInsets.all(Spacing.xs),
@@ -399,7 +426,7 @@ class _SwitchButton extends StatelessWidget {
       ),
       child: TextButton(
         onPressed: onPressed,
-        child: Text(text, style: appTextTheme().titleSmall),
+        child: Text(text, style: appText.titleSmall),
       ),
     );
   }
