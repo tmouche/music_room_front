@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../app/controllers/auth_controller.dart';
+import 'package:music_room/core/utils/regex.dart';
+import 'package:music_room/core/utils/ui_utils.dart';
+import 'package:music_room/features/auth/provider.dart';
 import '../app/theme/spacing.dart';
-import '../app/utils/exception.dart';
-import '../components/widgets/gradient_text.dart';
+import '../core/utils/exception.dart';
+import '../widgets/gradient_text.dart';
+import '../widgets/auth_parameters.dart';
 
 class LogInPage extends ConsumerStatefulWidget {
   const LogInPage({super.key});
@@ -16,54 +19,138 @@ class _LogInPageState extends ConsumerState<LogInPage> {
   bool knowUser = true;
 
   final _usernameController = TextEditingController();
+  final _usernameShakeKey = GlobalKey<AuthFieldState>();
   final _emailController = TextEditingController();
+  final _emailShakeKey = GlobalKey<AuthFieldState>();
   final _passwordController = TextEditingController();
+  final _passwordShakeKey = GlobalKey<AuthFieldState>();
 
   bool _isLoading = false;
+  bool _askedReset = false;
 
   void _onSignInSelected() {
     setState(() {
       knowUser = false;
+      _passwordController.clear();
     });
   }
 
   void _onLogInSelected() {
     setState(() {
       knowUser = true;
+      _passwordController.clear();
     });
   }
 
   Future<void>  _resetPasswordHandler() async {
     final String email = _emailController.text.trim();
 
-    if (email.isEmpty) {
-      // Faire vibrer la case Email en la collorant en rouge
+    if (email.isEmpty || !isValidEmail(email)) {
+      _emailShakeKey.currentState?.shake();
+      return ;
+    }
+
+    if (_askedReset) {
       return ;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      ref.read(authProvider.notifier).forgotPassword(email);
+      await ref.read(authProvider.notifier).forgotPassword(email);
+      if (mounted) setState(() => _askedReset = true);
     } on ApiException catch (e) {
-      return ;
+      if (mounted) UiUtils.showError(context, 'Reset Password Failed, Server Error.');
     } catch (e) {
-      return ;
+      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _onLogIn() {
+  Future<void> _onLogIn() async {
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
+
+    if (email.isEmpty || !isValidEmail(email)) {
+      _emailShakeKey.currentState?.shake();
+      return ;
+    }
+    if (password.isEmpty) {
+      _passwordShakeKey.currentState?.shake();
+      return ;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await ref.read(authProvider.notifier).login(email, password);
+    } on ApiException catch (e) {
+      if (mounted) _passwordShakeKey.currentState?.shake();
+    } catch (e) {
+      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _onCreateAccount() async {
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
+    final String username = _usernameController.text.trim();
+
+    if (email.isEmpty || !isValidEmail(email)) {
+      _emailShakeKey.currentState?.shake();
+      return ;
+    }
+    if (password.isEmpty) {
+      _passwordShakeKey.currentState?.shake();
+      return ;
+    }
+    if (username.isEmpty) {
+      _usernameShakeKey.currentState?.shake();
+      return ;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // await ref.read(authProvider.notifier).register(username, email, password);
+    } on ApiException catch (e) {
+      if (mounted) UiUtils.showError(context, e.message);
+    } catch (e) {
+      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
     return ;
   }
 
-  void _onCreateAccount() {
+  Future<void> _onGoogleSSO() async {
+    setState(() => _isLoading = true);
+
+    try {
+      await ref.read(authProvider.notifier).loginGoogle();
+    } on ApiException catch (e) {
+      if (mounted) UiUtils.showError(context, e.message);
+    } catch (e) {
+      if (mounted) {
+        UiUtils.showError(context, 'An unexpected error occured, Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+
     return ;
   }
 
-    void _onGoogleSSO() {
-    return ;
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+
+    super.dispose();
   }
 
 
@@ -140,8 +227,11 @@ class _LogInPageState extends ConsumerState<LogInPage> {
                       AuthParameters(
                         knowUser: knowUser,
                         usernameController: _usernameController,
+                        usernameShakeKey: _usernameShakeKey,
                         emailController: _emailController,
+                        emailShakeKey: _emailShakeKey,
                         passwordController: _passwordController,
+                        passwordShakeKey: _passwordShakeKey,
                       ),
                       const SizedBox(height: Spacing.xl),
                       Container(
@@ -157,7 +247,7 @@ class _LogInPageState extends ConsumerState<LogInPage> {
                           ),
                         ),
                         child: TextButton(
-                          onPressed: knowUser ? _onLogIn : _onCreateAccount, 
+                          onPressed: _isLoading ? null : knowUser ? _onLogIn : _onCreateAccount, 
                           child: Text(
                             knowUser ? 'Log In' : 'Create Account',
                             textAlign: TextAlign.center,
@@ -173,11 +263,19 @@ class _LogInPageState extends ConsumerState<LogInPage> {
                             minimumSize: Size.zero
                           ),
                           onPressed: _isLoading ? null : _resetPasswordHandler, 
-                          child: Text(
-                            'Forgot Password?',
-                            style: TextStyle(
-                              color: appColor.secondary, 
-                              fontSize: 12,
+                          child: !_askedReset
+                            ? Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  color: appColor.secondary, 
+                                  fontSize: 12,
+                                )
+                            )
+                            : Text(
+                                'Check Your Email!',
+                                style: TextStyle(
+                                  color: Colors.green, 
+                                  fontSize: 12,
                             )
                           )
                         ),
@@ -242,121 +340,6 @@ class _LogInPageState extends ConsumerState<LogInPage> {
   }
 }
 
-class AuthParameters extends StatelessWidget {
-  const AuthParameters({
-    super.key,
-    required this.knowUser,
-    required this._usernameController,
-    required this._emailController,
-    required this._passwordController,
-  });
-
-  final bool knowUser;
-  final TextEditingController _usernameController;
-  final TextEditingController _emailController;
-  final TextEditingController _passwordController;
-
-  @override
-  Widget build(BuildContext context) {
-    final appColor = Theme.of(context).colorScheme;
-
-    return Column(
-      spacing: Spacing.md,
-      children: [
-        if (!knowUser)
-          _AuthField(
-            title: 'Username',
-            icon: Icon(Icons.person, color: appColor.onSurfaceVariant,),
-            hint: 'your_username',
-            controller: _usernameController,
-            textInputAction: TextInputAction.next,
-          ),
-        _AuthField(
-          title: 'Email',
-          icon: Icon(Icons.mail, color: appColor.onSurfaceVariant,),
-          hint: 'your@email.com',
-          controller: _emailController,
-          textInputAction: TextInputAction.next,
-          keyboardType: TextInputType.emailAddress,
-        ),
-        _AuthField(
-          title: 'Password',
-          icon: Icon(Icons.lock, color: appColor.onSurfaceVariant,),
-          hint: '•••••••••',
-          controller: _passwordController,
-          textInputAction: TextInputAction.done,
-          obscureText: true,
-        ),     
-      ],
-    );
-  }
-}
-
-class _AuthField extends StatelessWidget {
-  const _AuthField({
-    super.key,
-    required this.title,
-    required this.icon,
-    required this.hint,
-    required this.controller,
-    required this.textInputAction,
-    this.obscureText = false,
-    this.keyboardType ,
-  });
-
-  final String title;
-  final Icon icon;
-  final String hint;
-  final TextEditingController controller;
-  final TextInputAction textInputAction;
-  final bool obscureText;
-  final TextInputType? keyboardType;
-
-  @override
-  Widget build(BuildContext context) {
-    final appColor = Theme.of(context).colorScheme;
-    final appText = Theme.of(context).textTheme;
-    
-    return Column(
-      spacing: Spacing.xs,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            title,
-            style: appText.titleSmall,
-          ),
-        ),
-        SizedBox(
-          height: 45,
-          child: TextField(
-            controller: controller,
-            textInputAction: textInputAction,
-            keyboardType: keyboardType,
-            obscureText: obscureText,
-            style: TextStyle(fontSize: 13, color: appColor.onSurfaceVariant),
-            cursorColor: appColor.onSurface,
-            cursorWidth: 1,
-            decoration: InputDecoration(
-              prefixIcon: icon,
-              filled: true,
-              fillColor: appColor.onSurfaceVariant.withValues(alpha: 0.15),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(15)
-              ),
-              hintText: hint,
-              hintStyle: TextStyle(fontSize: 13),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(width: 2, color: appColor.secondary.withAlpha(150)),
-                borderRadius: BorderRadius.circular(15),
-              ),
-            ),
-          )
-        )
-      ],
-    );
-  }
-}
 
 class AuthSwitch extends StatelessWidget {
   const AuthSwitch({

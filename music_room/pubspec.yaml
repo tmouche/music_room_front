@@ -17,12 +17,20 @@ dependencies:
   flutter_riverpod: ^3.3.1
   logging: ^1.3.0
   material: ^1.0.1
+  google_fonts: ^8.1.0
+  build_runner: ^2.15.0
+  get_it: ^9.2.1
+  injectable: ^3.0.0
+  go_router: ^17.3.0
+  cupertino_icons: ^1.0.9
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  injectable_generator: ^3.0.2
+  device_preview: ^1.3.1
 
 flutter:
   uses-material-design: true
@@ -30,3 +38,4 @@ flutter:
     - assets/images/logo.png
     - assets/images/google.png
   
+p, color: C
