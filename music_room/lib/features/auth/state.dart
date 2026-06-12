@@ -2,9 +2,9 @@ import 'package:music_room/core/model/user.dart';
 
 class AuthState {
   const AuthState({
-    required this._token,
-    required this._user,
-    required this._isLoading,
+    this._token,
+    this._user,
+    this._isLoading = false,
   });
 
   final String? _token;
@@ -28,7 +28,4 @@ class AuthState {
     );
   }
 
-  bool getIsAuthenticated() {
-    return isAuthenticated;
-  }
 }

@@ -7,3 +7,12 @@ class ApiException implements Exception {
   @override
   String toString() => message;
 }
+
+class StreamException implements Exception {
+  const StreamException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}

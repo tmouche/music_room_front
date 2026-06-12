@@ -3,41 +3,43 @@ import 'package:music_room/core/model/room_user.dart';
 import 'package:music_room/core/model/track.dart';
 
 class Room {
-  String id;
-  String owner;
-  String name;
-  Track? currentTrack;
-  List<QueueItem> queue;
-  int status;
-  List<RoomUser> listeners;
-  bool isPublic;
-  bool isLicensed;
-
-  Duration positionAtLastSync;
-  DateTime updatedAt;
-
   Room({
-    required this.id,
-    required this.owner,
-    required this.name,
-    this.currentTrack,
-    List<QueueItem>? queue,
-    this.status = 0,
-    List<RoomUser>? listeners,
-    Duration? positionAtLastSync,
+    required this._id,
+    required this._name,
+    required this._owner,
+    this._isPublic = true,
+    this._isLicensed = false,
+    this._listeners = const [],
+    this._positionAtLastSync = Duration.zero,
+    this._queue = const [],
+    this._status = 0,
+    this._currentTrack,
     DateTime? updatedAt,
-    this.isPublic = true,
-    this.isLicensed = false,
-  }) : queue = queue ?? [],
-       listeners = listeners ?? [],
-       positionAtLastSync = positionAtLastSync ?? Duration.zero,
-       updatedAt = updatedAt ?? DateTime.now();
+  }) : _updatedAt = updatedAt ?? DateTime.now().toUtc();
+
+  final String _id;
+  final String _name;
+  final String _owner;
+  final bool _isPublic;
+  final bool _isLicensed;
+  final List<RoomUser> _listeners;
+  final Duration _positionAtLastSync;
+  final List<QueueItem> _queue;
+  final int _status;
+  final Track? _currentTrack;
+  final DateTime? _updatedAt;
+
+  String get id => _id;
+  Track? get currentTrack => _currentTrack;
+
+
+  int get people => _listeners.length;
 
   factory Room.fromJson(Map<String, dynamic> json) {
     return Room(
       id: json['id'],
-      owner: json['owner_id'],
       name: json['name'] ?? 'Unnamed Room',
+      owner: json['owner_id'],
       isPublic: json['is_public'] ?? true,
       isLicensed: json['has_license'] ?? json['is_licensed'] ?? false,
       status: (json['is_playing'] == true) ? 1 : 0,
@@ -47,19 +49,46 @@ class Room {
     );
   }
 
+  Room copyWith({
+    String? id,
+    String? name,
+    String? owner,
+    bool? isPublic,
+    bool? isLicensed,
+    List<RoomUser>? listeners,
+    Duration? positionAtLastSync,
+    List<QueueItem>? queue,
+    int? status,
+    Track? currentTrack,
+    DateTime? updatedAt,
+  }) {
+    return Room(
+      id: id ?? _id,
+      name: name ?? _name,
+      owner: owner ?? _owner,
+      isPublic: isPublic ?? _isPublic,
+      isLicensed: isLicensed ?? _isLicensed,
+      listeners: listeners ?? _listeners,
+      positionAtLastSync: positionAtLastSync ?? _positionAtLastSync,
+      queue: queue ?? _queue,
+      status: status ?? _status,
+      currentTrack: currentTrack ?? _currentTrack,
+      updatedAt: updatedAt ?? _updatedAt,
+    );
+  }
+
   Duration get currentPosition {
-    if (currentTrack == null) return Duration.zero;
-    if (status != 1) return positionAtLastSync;
+    if (_currentTrack == null) return Duration.zero;
+    if (_status != 1) return _positionAtLastSync;
 
     final now = DateTime.now();
-    final elapsed = now.difference(updatedAt);
-    final calculatedPos = positionAtLastSync + elapsed;
+    final elapsed = now.difference(_updatedAt!);
+    final calculatedPos = _positionAtLastSync + elapsed;
 
-    if (calculatedPos > currentTrack!.duration) {
-      return currentTrack!.duration;
+    if (calculatedPos > _currentTrack.duration) {
+      return _currentTrack.duration;
     }
     return calculatedPos;
   }
 
-  int get people => listeners.length;
 }

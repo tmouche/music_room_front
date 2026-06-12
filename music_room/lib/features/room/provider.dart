@@ -1,8 +1,9 @@
 
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:music_room/core/model/room.dart';
+import 'package:music_room/features/room/controller.dart';
+import 'package:music_room/features/room/state.dart';
 
-final roomsProvider = FutureProvider<List<Room>>((ref) async {
-  return ref.watch(roomRepositoryProvider).getRooms();
-});
+final roomProvider = NotifierProvider<RoomController, RoomState>(
+  () => RoomController(),
+);

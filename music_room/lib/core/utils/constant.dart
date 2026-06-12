@@ -14,3 +14,5 @@ const String USER_UPDATE_EMAIL = '/users/me/email';
 const String USER_UPDATE_FAVORITE_GENRES = '/users/me/favorite-genres';
 const String USER_UPDATE_PRIVACY = '/users/me/privacy';
 const String USER_CONFIRM_EMAIL = '/users/me/send-confirmation-email';
+
+const String ROOMS = '/rooms';
