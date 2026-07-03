@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/regex.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/auth/provider.dart';
+import 'package:music_room/widgets/music_room_logo.dart';
 import '../app/theme/spacing.dart';
 import '../core/utils/exception.dart';
 import '../widgets/gradient_text.dart';
@@ -60,8 +62,10 @@ class _LogInPageState extends ConsumerState<LogInPage> {
       await ref.read(authProvider.notifier).forgotPassword(email);
       if (mounted) setState(() => _askedReset = true);
     } on ApiException catch (e) {
+      logger.debug('API Error on reset password: $e');
       if (mounted) UiUtils.showError(context, 'Reset Password Failed, Server Error.');
     } catch (e) {
+      logger.debug('Error on reset password: $e');
       if (mounted) UiUtils.showError(context, 'Internal Server Error.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -86,8 +90,10 @@ class _LogInPageState extends ConsumerState<LogInPage> {
     try {
       await ref.read(authProvider.notifier).login(email, password);
     } on ApiException catch (e) {
+      logger.debug('API Error on login password: $e');
       if (mounted) _passwordShakeKey.currentState?.shake();
     } catch (e) {
+      logger.debug('Error on login password: $e');
       if (mounted) UiUtils.showError(context, 'Internal Server Error.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -153,7 +159,6 @@ class _LogInPageState extends ConsumerState<LogInPage> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final appColor = Theme.of(context).colorScheme;
@@ -168,23 +173,7 @@ class _LogInPageState extends ConsumerState<LogInPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 86,
-                  height: 86,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        appColor.primary,
-                        appColor.secondary,
-                        appColor.tertiary,
-                      ]
-                    ),
-                  ),
-                  child: const Icon(Icons.queue_music, size: 38, color: Colors.white),
-                ),
+                MusicRoomLogo(size: 86),
                 const SizedBox(height: Spacing.sm),
                 GradientText(
                   'Music Room',
@@ -260,7 +249,6 @@ class _LogInPageState extends ConsumerState<LogInPage> {
                         TextButton(
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
-                            minimumSize: Size.zero
                           ),
                           onPressed: _isLoading ? null : _resetPasswordHandler, 
                           child: !_askedReset

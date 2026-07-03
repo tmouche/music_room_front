@@ -2,18 +2,25 @@ import 'package:music_room/core/model/track.dart';
 import 'package:music_room/core/model/track_cache.dart';
 
 class QueueItem {
-  final String id;
-  final String roomId;
-  final int trackId;
-  final double position;
-  final Track track;
+  final String _id;
+  final String _roomId;
+  final String _trackId;
+  final double _position;
+  final Track _track;
 
   QueueItem({
-    required this.id,
-    required this.roomId,
-    required this.trackId,
-    required this.position,
-  }) : track = getCachedTrack(trackId);
+    required this._id,
+    required this._roomId,
+    required this._trackId,
+    required this._position,
+    Track? track,
+  }) : _track = track ?? getCachedTrack(_trackId);
+
+  String get id => _id;
+  String get roomId => _roomId;
+  String get trackId => _trackId;
+  double get position => _position;
+  Track get track => _track;
 
   factory QueueItem.fromJson(Map<String, dynamic> json) {
     return QueueItem(

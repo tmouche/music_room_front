@@ -1,10 +1,5 @@
-import 'dart:async';
-
-import 'package:music_room/core/audio/audio_service.dart';
 import 'package:music_room/core/model/room.dart';
 import 'package:music_room/core/model/track.dart';
-import 'package:music_room/core/network/websocket_service.dart';
-import 'package:music_room/features/room/impl_repository.dart';
 
 class RoomState {
   const RoomState({
@@ -13,7 +8,7 @@ class RoomState {
     this._availableRooms = const [],
     this._isInitialRoomState = false,
     this._roomClosedMessage,
-    this._playerErrorMessage
+    this._playerErrorMessage,
   });
 
   final bool _isPlaying;

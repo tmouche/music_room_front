@@ -1,8 +1,10 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:music_room/core/model/room.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/screens/log_in.dart';
+import 'package:music_room/screens/room.dart';
 import 'package:music_room/screens/rooms.dart';
 import 'package:music_room/widgets/scaffold_nav_bar.dart';
 import 'package:music_room/widgets/underConstruction.dart';
@@ -25,7 +27,16 @@ final routerProvider = Provider((ref) {
         ),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(path: '/rooms', builder: (_, __) => const RoomsPage()),
+            GoRoute(
+              path: '/rooms',
+              builder: (_, __) => const RoomsPage(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (_, state) => RoomPage(room: state.extra as Room)
+                ),
+              ],
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/search', builder: (_, __) => const UnderConstructionPage()),

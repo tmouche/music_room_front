@@ -1,23 +1,29 @@
-
 import 'package:music_room/core/model/track_cache.dart';
 
 class Track {
-  final int id;
-  final String title;
-  final String artist;
-  final String? imageUrl;
-  final Duration duration;
-  final String streamUrl;
+  final String _id;
+  final String _title;
+  final String _artist;
+  final String? _imageUrl;
+  final Duration _duration;
+  final String _streamUrl;
 
   Track({
-    required this.id,
-    required this.title,
-    required this.artist,
-    this.imageUrl,
-    required this.duration,
-    this.streamUrl =
+    required this._id,
+    required this._title,
+    required this._artist,
+    this._imageUrl,
+    required this._duration,
+    this._streamUrl =
         'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
   });
+
+  String get id => _id;
+  String get title => _title;
+  String get artist => _artist;
+  String? get imageUrl => _imageUrl;
+  String get streamUrl => _streamUrl;
+  Duration get duration => _duration;
 
   factory Track.fromJson(Map<String, dynamic> json) {
     String artistName = 'Unknown Artist';
@@ -43,5 +49,23 @@ class Track {
 
     cacheTrack(track);
     return track;
+  }
+
+  Track copyWith({
+    String? id,
+    String? title,
+    String? artiste,
+    String? imageUrl,
+    Duration? duration,
+    String? streamUrl,
+  }) {
+    return Track(
+      id: id ?? _id,
+      title: title ?? _title,
+      artist: artiste ?? _artist,
+      imageUrl: imageUrl ?? _imageUrl,
+      duration: duration ?? _duration,
+      streamUrl: streamUrl ?? _streamUrl,
+    );
   }
 }

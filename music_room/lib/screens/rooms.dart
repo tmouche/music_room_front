@@ -4,6 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
+import 'package:music_room/core/model/room.dart';
+import 'package:music_room/core/utils/exception.dart';
+import 'package:music_room/core/utils/logger.dart';
+import 'package:music_room/core/utils/ui_utils.dart';
+import 'package:music_room/features/room/provider.dart';
 import 'package:music_room/widgets/backgrounded_icons_button.dart';
 import 'package:music_room/widgets/room_card.dart';
 
@@ -16,20 +21,43 @@ class RoomsPage extends ConsumerStatefulWidget {
 
 class _RoomsPageState extends ConsumerState<RoomsPage> {
 
+  late final List<Room> rooms;
 
-  void _show_notifications() {
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(roomProvider.notifier).refreshRoom();
+    });
+  }
+
+  void _showNotifications() {
     showModalBottomSheet(
       context: context,
       builder: (_) => NotificationModalTest(), 
     );
   }
 
-  void _create_rooms() {
+  void _createRooms() {
     return ;
   }
 
-  void _refresh_rooms() {
-    return ;
+  Future<void> _refreshRooms() async {
+    setState(() => _isLoading = true);
+
+    try {
+      await ref.read(roomProvider.notifier).refreshRoom();
+    } on ApiException catch (e) {
+      logger.debug('Api Error on refresh rooms: $e');
+      if (mounted) UiUtils.showError(context, 'Connection Error');
+    } catch (e) {
+      logger.debug('Error on login password: $e');
+      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }    return ;
   }
 
   @override
@@ -37,7 +65,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
     final appColor = Theme.of(context).colorScheme;
     final appText = Theme.of(context).textTheme;
 
-    // final rooms = ref.watch(roomsProvider)
+    final rooms = ref.watch(roomProvider.select((s) => s.availableRooms));
 
     return Scaffold(
       backgroundColor: appColor.surface,
@@ -67,14 +95,14 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                         spacing: Spacing.xs,
                         children: [
                           BackgroundedIconsButton(
-                            onPressed: _create_rooms,
+                            onPressed: _createRooms,
                             icon: CupertinoIcons.plus,
                             bgColor: Color.fromRGBO(239, 68, 68, 1),
                             iconSize: 25,
                             boxPadding: 5,
                           ),
                           BackgroundedIconsButton(
-                            onPressed: _show_notifications,
+                            onPressed: _showNotifications,
                             icon: CupertinoIcons.bell,
                             iconSize: 25,
                             boxPadding: 5,
@@ -127,14 +155,28 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text("Live Rooms", style: Texting.titleMedium),
-                            BackgroundedIconsButton(
-                              onPressed: _refresh_rooms,
-                              icon: CupertinoIcons.arrow_2_circlepath,
-                              iconSize: 20,
+                            SpinningBackgroundedIconButton(
+                              onPressed: _refreshRooms,
+                              icon: Icons.refresh,
+                              iconSize: 22,
                               boxPadding: 5,
+                              isLoading: _isLoading,
                             ),
                           ],
-                        )
+                        ),
+                        SizedBox(height: Spacing.md,),
+                        _isLoading ?
+                          LoadingRoomCard()
+                        : rooms.isNotEmpty ?
+                            SingleChildScrollView(
+                              child: Column(
+                                spacing: Spacing.md,
+                                children: rooms.map(
+                                  (toElement) => RoomCard(room: toElement)
+                                ).toList()
+                              ),
+                            )
+                          : AddRoomCard()
                       ],
                     ),                    
                   ],
@@ -150,6 +192,8 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
 }
 
 class NotificationModalTest extends StatelessWidget {
+  const NotificationModalTest({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(

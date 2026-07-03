@@ -17,6 +17,12 @@ class Texting {
     color: Coloring.onSurface,
   );
 
+  static final titleMiddle = GoogleFonts.spaceGrotesk(
+    fontSize: 14,
+    fontWeight: FontWeight.bold,
+    color: Coloring.onSurface,
+  );
+
   static final titleSmall = GoogleFonts.spaceGrotesk(
     fontSize: 12,
     fontWeight: FontWeight.bold,
@@ -36,6 +42,11 @@ class Texting {
   static final bodyMediumAccent = GoogleFonts.spaceGrotesk(
     fontSize: 13,
     color: Coloring.onSurface,
+  );
+
+  static final bodyMiddle = GoogleFonts.spaceGrotesk(
+    fontSize: 11,
+    color: Coloring.onSurfaceVarient,
   );
 
   static final bodySmall = GoogleFonts.spaceGrotesk(

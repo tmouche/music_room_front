@@ -31,12 +31,12 @@ class ScaffoldWithNavBar extends StatelessWidget {
             label: 'Listen Now'
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.search,
+            icon: Icon(CupertinoIcons.dot_radiowaves_left_right,
               color: navigationShell.currentIndex == 1
               ? Coloring.onSurface
               : Coloring.onSurfaceVarient.withValues(alpha: 0.75)
             ),
-            label: 'Search'
+            label: 'My Room'
           ),
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.person,

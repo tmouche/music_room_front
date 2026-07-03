@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:music_room/core/model/track.dart';
+import 'package:music_room/core/model/room_user.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/room/provider.dart';
@@ -14,10 +14,6 @@ class WebSocketController extends Notifier<WebSocketState> {
   static const String _eventRoomState = 'RoomState';
   static const String _eventUserState = 'UserState';
   static const String _eventRoomClosed = 'RoomClosed';
-  static const String _eventPlay = 'Play';
-  static const String _eventPause = 'Pause';
-  static const String _eventSeekTo = 'SeekTo';
-  static const String _eventNextTrack = 'NextTrack';
 
   @override
   WebSocketState  build() {
@@ -77,7 +73,6 @@ class WebSocketController extends Notifier<WebSocketState> {
     }
   }
 
-
   Future<void>  _onMessage(dynamic message) async {
     final data = jsonDecode(message as String);
     if (data is! Map<String, dynamic>) return ;
@@ -91,12 +86,49 @@ class WebSocketController extends Notifier<WebSocketState> {
     if (eventType == _eventRoomState) {
       await _onRoomEvent(payload);
     }
+    else if (eventType == _eventUserState) {
+      await _onUserEvent(payload);
+    }
+    else if (eventType == _eventRoomClosed) {
+      await ref.read(roomProvider.notifier).onRoomClose();
+    }
   }
 
   Future<void>  _onRoomEvent(Map<String, dynamic> payload) async {
     final roomController = ref.read(roomProvider.notifier);
 
-    if (payload['queue'] is List) roomController.onUpdateQueue(payload['queue'] as List);
-    if (payload['current_track'] != null) roomController.onUpdateTrack(Track.fromJson(payload['current_track']));
+    if (payload['queue'] is List) {
+      roomController.onUpdateQueue(payload['queue'] as List);
+    }
+    await roomController.onUpdateTrack(payload['current_track']);
+      
+    final isPlaying = payload['is_playing'] == true;
+    await roomController.onUpdatePlaying(payload, isPlaying);
+    if (payload['current_position'] != null) {
+      await roomController.onCurrentPosition(payload, isPlaying);
+    }
+    roomController.setRoomHasNotInitial();
   }
+
+  Future<void>  _onUserEvent(Map<String, dynamic> payload) async {
+    final roomController = ref.read(roomProvider.notifier);
+
+    final users = payload['user_list'];
+    if (users is! List) return;
+
+    final newListeners = users
+      .map((u) => _roomUserFromPayload(u))
+      .whereType<RoomUser>()
+      .toList();
+    roomController.onUserChange(payload, newListeners);
+  }
+
+  RoomUser? _roomUserFromPayload(dynamic payload) {
+    if (payload is! Map) return null;
+    final id = payload['user_id']?.toString();
+    final username = payload['username']?.toString();
+    if (id == null || username == null) return null;
+    return RoomUser(id: id, username: username);
+  } 
 }
+

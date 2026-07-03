@@ -1,4 +1,5 @@
-
+import 'dart:math';
+import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/core/model/room.dart';
 import 'package:music_room/core/network/api_client.dart';
 import 'package:music_room/core/network/api_path.dart';
@@ -8,8 +9,12 @@ class RoomRepository {
   
   Future<List<Room>> getRooms() async {
     final response = await ApiClient.get(ApiPath.rooms);
+    final random = Random();
     if (response is List) {
-      return response.map((data) => Room.fromJson(data)).toList();
+      return response.map((data) {
+        final newRoom = Room.fromJson(data);
+        return newRoom.copyWith(gradientColor: Coloring.cardColors[random.nextInt(Coloring.cardColors.length)]);
+      }).toList();
     }
     return [];
   }
@@ -19,7 +24,7 @@ class RoomRepository {
     return Room.fromJson(response);
   }
 
-  Future<void> addTrack(String roomId, int trackId) async {
+  Future<void> addTrack(String roomId, String trackId) async {
     await ApiClient.post(
       ApiPath.roomsTrackManage(roomId),
       body: {'track_id': trackId}
