@@ -49,6 +49,17 @@ class Texting {
     color: Coloring.onSurfaceVarient,
   );
 
+  static final bodyMiddleTrans = GoogleFonts.spaceGrotesk(
+    fontSize: 11,
+    color: Coloring.onSurface.withValues(alpha: 0.6),
+  );
+
+  static final bodyMiddleAccent = GoogleFonts.spaceGrotesk(
+    fontSize: 11,
+    color: Coloring.onSurface,
+  );
+
+
   static final bodySmall = GoogleFonts.spaceGrotesk(
     fontSize: 8,
     color: Coloring.onSurfaceVarient,

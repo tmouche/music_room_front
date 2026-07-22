@@ -1,17 +1,12 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:music_room/core/model/user.dart';
 import 'package:music_room/core/network/api_client.dart';
-import 'package:music_room/core/storage/session_storage.dart';
 import 'package:music_room/core/utils/constant.dart' as constant;
 import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:music_room/features/auth/state.dart';
-
 
 class AuthRepository {
-    AuthRepository();
+  AuthRepository();
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
@@ -54,7 +49,7 @@ class AuthRepository {
     }
   }
 
-  Future<void> loginGoogle() async {
+  Future<Map<String, dynamic>> loginGoogle() async {
     if (kIsWeb) {
       logger.warning('Google Authentification is not available on Web');
       throw ApiException('Google Authentification not available.');
@@ -80,6 +75,7 @@ class AuthRepository {
         logger.error('Authentication response is missing.');
         throw ApiException('No response data');
       }
+      return data;
     } catch (e) {
       logger.error('Google Login failed', error: e);
       throw ApiException('Google Authentification Operation failed');
@@ -128,9 +124,6 @@ class AuthRepository {
       logger.error('Failed to update user Username', error: e);
       throw ApiException('Update Username Operation failed');
     }
-    
-    User? user = state.user?.copyWith(username: newUsername);
-    state = state.copyWith(user: user);
   }
 
   Future<void> updateEmail(String newEmail) async {
@@ -145,9 +138,6 @@ class AuthRepository {
       logger.error('Failed to update user Email', error: e);
       throw ApiException('Update Email Operation failed');
     }
-    
-    User? user = state.user?.copyWith(email: newEmail, emailConfirmed: false);
-    state = state.copyWith(user: user);
   }
 
   Future<void> updatePassword(String currentPassword, String newPassword) async {
@@ -172,9 +162,6 @@ class AuthRepository {
       logger.error('Failed to update user Favorite Genres', error: e);
       throw ApiException('Update Favorite Genres Operation failed');
     }
-    
-    User? user = state.user?.copyWith(favoriteGenres: favoriteGenres);
-    state = state.copyWith(user: user);
   }
 
   Future<void> updatePrivacyLevel(String privacyLevel) async {
@@ -187,9 +174,6 @@ class AuthRepository {
       logger.error('Failed to update user Privacy Level', error: e);
       throw ApiException('Update Privacy Level Operation failed');
     }
-    
-    User? user = state.user?.copyWith(privacyLevel: privacyLevel);
-    state = state.copyWith(user: user);
   }
 
   Future<void>  confirmEmail() async {

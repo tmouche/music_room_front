@@ -59,7 +59,7 @@ class _LogInPageState extends ConsumerState<LogInPage> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(authProvider.notifier).forgotPassword(email);
+      ref.read(authProvider.notifier).forgotPassword();
       if (mounted) setState(() => _askedReset = true);
     } on ApiException catch (e) {
       logger.debug('API Error on reset password: $e');
@@ -121,7 +121,7 @@ class _LogInPageState extends ConsumerState<LogInPage> {
     setState(() => _isLoading = true);
 
     try {
-      // await ref.read(authProvider.notifier).register(username, email, password);
+      await ref.read(authProvider.notifier).signin(username, email, password);
     } on ApiException catch (e) {
       if (mounted) UiUtils.showError(context, e.message);
     } catch (e) {

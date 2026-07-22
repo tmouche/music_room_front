@@ -6,7 +6,8 @@ import 'package:music_room/core/network/api_path.dart';
 import 'package:music_room/core/utils/exception.dart';
 
 class RoomRepository {
-  
+  RoomRepository();
+
   Future<List<Room>> getRooms() async {
     final response = await ApiClient.get(ApiPath.rooms);
     final random = Random();
@@ -17,6 +18,10 @@ class RoomRepository {
       }).toList();
     }
     return [];
+  }
+
+  Future<List<Room>?> refreshRooms() async {
+    return await getRooms();
   }
 
   Future<Room> createRoom() async {
@@ -66,6 +71,7 @@ class RoomRepository {
   }
 
   Future<void> transferOwnership(String roomId, String newOwnerId) async {
+    print('Trasnfert ownerShip Impl');
     await ApiClient.post(
       ApiPath.roomsOwnershipTransfert(roomId),
       body: {'new_owner_id': newOwnerId}

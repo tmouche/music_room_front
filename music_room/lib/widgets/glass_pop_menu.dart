@@ -52,12 +52,8 @@ class _GlassPopMenuState extends State<GlassPopMenu>
 
   @override
   void dispose() {
-    final AnimationController animation = _animation;
-    final CurvedAnimation scale = _scale;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      scale.dispose();
-      animation.dispose();
-    });
+    _scale.dispose();
+    _animation.dispose();
     super.dispose();
   }
 

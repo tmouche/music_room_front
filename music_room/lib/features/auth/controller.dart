@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/core/model/user.dart';
 import 'package:music_room/core/storage/session_storage.dart';
@@ -19,12 +21,21 @@ class AuthController extends Notifier<AuthState> {
 
   Future<void>  login(String email, String password) async {
     final Map<String, dynamic> data = await _repo.login(email, password);
-    await _storeAuthenticatedSession(Map<String, dynamic>.from(data));
+    await _storeAuthenticatedSession(data);
+  }
+
+  Future<void>  loginGoogle() async {
+    final Map<String, dynamic> data = await _repo.loginGoogle();
+    await _storeAuthenticatedSession(data);
   }
 
   Future<void> _storeAuthenticatedSession(Map<String, dynamic> data) async {
     final accessToken = data['access_token']?.toString();
-    if (accessToken == null || accessToken.isEmpty) {
+    final refreshToken = data['refresh_token']?.toString();
+    if (
+      (accessToken == null || accessToken.isEmpty)
+      || (refreshToken == null || refreshToken.isEmpty)
+    ) {
       throw ApiException('Authentication response is missing an access token.');
     }
 
@@ -34,7 +45,7 @@ class AuthController extends Notifier<AuthState> {
 
     await SessionStorage.saveSession(
       accessToken: accessToken,
-      refreshToken: data['refresh_token']?.toString(),
+      refreshToken: refreshToken,
     );
   }
 
@@ -91,6 +102,44 @@ class AuthController extends Notifier<AuthState> {
     final Map<String, dynamic> data = await _repo.signin(username, email, password);
     await _storeAuthenticatedSession(Map<String, dynamic>.from(data as Map));
   }
-}
 
-// ACTUELLEMENT ENTRAIN DE FAIRE LE AUTH CONTROLLER ET DONC DE CONVERTIR LES REPOSITORIES
+  void  updateUsername(String newUsername) {
+    unawaited(_repo.updateUsername(newUsername));
+
+    User  user = state.user!.copyWith(username: newUsername);
+    state = state.copyWith(user: user);
+  }
+
+  void  updateEmail(String newEmail) {
+    unawaited(_repo.updateEmail(newEmail));
+
+    User  user = state.user!.copyWith(email: newEmail, emailConfirmed: false);
+    state = state.copyWith(user: user);
+  }
+
+  void  updatePassword(String currentPassword, String newPassword) {
+    unawaited(_repo.updatePassword(currentPassword, newPassword));
+  }
+
+  void  updateFavoriteGenres(List<String>? favoriteGenres) {
+    unawaited(_repo.updateFavoriteGenres(favoriteGenres));
+
+    User  user = state.user!.copyWith(favoriteGenres: favoriteGenres);
+    state = state.copyWith(user: user);
+  }
+
+  void  updatePrivacyLevel(String privacyLevel) {
+    unawaited(_repo.updatePrivacyLevel(privacyLevel));
+
+    User user = state.user!.copyWith(privacyLevel: privacyLevel);
+    state = state.copyWith(user: user);
+  }
+
+  void  confirmEmail() async {
+    unawaited(_repo.confirmEmail());
+  }
+
+  void  forgotPassword() async {
+    unawaited(_repo.forgotPassword(state.user!.email!));
+  }
+}

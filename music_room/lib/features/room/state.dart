@@ -27,21 +27,23 @@ class RoomState {
 
   Track? get currentTrack => _currentRoom?.currentTrack;
 
+  static const _unset = Object();
+
   RoomState copyWith({
     bool? isPlaying,
-    Room? currentRoom,
+    Object? currentRoom = _unset,
     List<Room>? availableRooms,
     bool? isInitialRoomState,
-    String? roomClosedMessage,
-    String? playerErrorMessage,
+    Object? roomClosedMessage = _unset,
+    Object? playerErrorMessage = _unset,
   }) {
     return RoomState(
       isPlaying: isPlaying ?? _isPlaying,
-      currentRoom: currentRoom ?? _currentRoom,
+      currentRoom: identical(currentRoom, _unset) ? _currentRoom : currentRoom as Room?,
       availableRooms: availableRooms ?? _availableRooms,
       isInitialRoomState: isInitialRoomState ?? _isInitialRoomState,
-      roomClosedMessage: roomClosedMessage ?? _roomClosedMessage,
-      playerErrorMessage: playerErrorMessage ?? _playerErrorMessage,
+      roomClosedMessage: identical(roomClosedMessage, _unset) ? _roomClosedMessage : roomClosedMessage as String?,
+      playerErrorMessage: identical(playerErrorMessage, _unset) ? _playerErrorMessage : playerErrorMessage as String?,
     );
   }
 }

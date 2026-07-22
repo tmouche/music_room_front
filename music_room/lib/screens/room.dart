@@ -1,4 +1,3 @@
-
 import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -13,7 +12,10 @@ import 'package:music_room/core/model/room.dart';
 import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
+import 'package:music_room/features/auth/provider.dart';
+import 'package:music_room/features/auth/state.dart';
 import 'package:music_room/features/room/provider.dart';
+import 'package:music_room/features/room/state.dart';
 import 'package:music_room/widgets/backgrounded_icons_button.dart';
 import 'package:music_room/widgets/friend_modal.dart';
 import 'package:music_room/widgets/glass_pop_menu.dart';
@@ -45,6 +47,9 @@ class _RoomPageState extends ConsumerState<RoomPage>
     parent: _controller,
     curve: Curves.easeInOutCubic,
   );
+
+  late bool _isListener;
+  late bool _isOwner;
 
   bool _isPlaying = true;
   bool _isModalOpen = false;
@@ -127,6 +132,24 @@ class _RoomPageState extends ConsumerState<RoomPage>
     showFriendModal(context);
   }
 
+  Future<void>  _onJoinRoom() async {
+    try {
+      await ref.read(roomProvider.notifier).openRoom(widget.room);
+    } catch (e) {
+      logger.error("Error during joining the room");
+      logger.debug("Detail: $e");
+    }
+  }
+
+  Future<void>  _onLeaveRoom() async {
+    try {
+      await ref.read(roomProvider.notifier).leaveRoom();
+    } catch (e) {
+      logger.error("Error during leaving the room");
+      logger.debug("Detail: $e");
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -154,15 +177,15 @@ class _RoomPageState extends ConsumerState<RoomPage>
             ),
           ],
         ),
-        GlassPopMenu(
+        if (_isListener) GlassPopMenu(
           items: [
-            widget.room.isLicensed ?
+            if (_isOwner) widget.room.isLicensed ?
             GlassPopMenuItem(icon: Icons.speaker_notes_off, label: 'Unlicense')
             : GlassPopMenuItem(icon: Icons.speaker_notes, label: 'License'),
-            widget.room.isPublic ?
+            if (_isOwner) widget.room.isPublic ?
             GlassPopMenuItem(icon: CupertinoIcons.lock, label: 'Privatize', onTap: _privatize)
             : GlassPopMenuItem(icon: CupertinoIcons.lock_open, label: 'Publish'),
-            GlassPopMenuItem(icon: Icons.exit_to_app, label: 'Quit'),
+            GlassPopMenuItem(icon: Icons.exit_to_app, label: 'Quit', onTap: _onLeaveRoom),
           ]
         )
       ],
@@ -189,6 +212,14 @@ class _RoomPageState extends ConsumerState<RoomPage>
                   height: lerpDouble(230, 70, t),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.45),
+                        blurRadius: lerpDouble(30, 5, t)!,
+                        spreadRadius: 0.5,
+                        offset: Offset(lerpDouble(10, 1, t)!, lerpDouble(10, 1, t)!),
+                      ),
+                    ],
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -219,12 +250,12 @@ class _RoomPageState extends ConsumerState<RoomPage>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            widget.room.currentTrack?.title ?? '',
+                            widget.room.currentTrack?.title ?? '...',
                             style: Texting.titleMedium,
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            widget.room.currentTrack?.artist ?? '',
+                            widget.room.currentTrack?.artist ?? '...',
                             style: Texting.bodyLarge,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -270,7 +301,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
             Alignment.centerRight,
             t,
           )!,
-          child: Row(
+          child: _isListener ? Row(
             mainAxisSize: MainAxisSize.min,
             spacing: Spacing.sm,
             children: [
@@ -287,7 +318,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
                 boxPadding: 5,
               ),
             ],
-          )
+          ) : null
         ),
       ],
     );
@@ -327,7 +358,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
                   Text('${widget.room.people} ${widget.room.people == 1 ? 'listener' : 'listeners'}', style: Texting.bodyMedium)
               ],
             ),
-            TextButton(
+            if (_isOwner) TextButton(
               onPressed: _onInviteButton,
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
@@ -359,6 +390,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
                 (toElement) => ListenerCard(
                   listener: toElement,
                   isOwner: toElement.username == widget.room.owner,
+                  amIOwner: _isOwner,
                 )
               ).toList(),
             )
@@ -382,7 +414,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
                       Text('${widget.room.queue.length} songs', style: Texting.bodyMedium)
                   ],
                 ),
-                TextButton(
+                if (_isOwner) TextButton(
                   onPressed: _onAddMusicButton,
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
@@ -580,8 +612,175 @@ class _RoomPageState extends ConsumerState<RoomPage>
     );
   }
 
+  Widget  _joinRoomButton() {
+    return Expanded(
+      child: Container(
+      decoration: BoxDecoration(
+        color: Coloring.onSurface,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: TextButton(
+        onPressed: _onJoinRoom,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: Spacing.sm,
+          children: [
+            Icon(Icons.headphones_outlined, color: Coloring.surfacePrimary, size: 25, fontWeight: FontWeight(500)),
+            Text('Join to listen music', style: Texting.titleMiddle.copyWith(color: Coloring.surfacePrimary, fontWeight: FontWeight(700)))
+          ],
+        )
+      ),
+      ),
+    );
+  }
+
+  Widget  _nextInQueueCard() {
+    return Container(
+      padding: EdgeInsets.all(Spacing.sm2),
+      decoration: BoxDecoration(
+        color: Coloring.onSurface.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.20), width: 1),
+      ),
+      child: Row(
+        spacing: Spacing.md,
+        children: [
+          SizedBox(
+            width: 55,
+            height: 55,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: widget.room.currentTrack?.imageUrl != null
+                  ? CachedNetworkImage(
+                      imageUrl: widget.room.currentTrack!.imageUrl!,
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Coloring.primary, Coloring.secondary],
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 0,
+            children: [
+              Text('UP NEXT', style: Texting.bodyMiddleTrans),
+              Text(
+                widget.room.currentTrack?.title ?? 'Nothing queued',
+                style: Texting.bodyLarge.copyWith(color: Coloring.onSurface),
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                widget.room.currentTrack?.artist ?? '...',
+                style: Texting.bodyMiddleTrans,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          )
+        ],
+      )
+    );
+  }
+
+
+  Widget  _buildOwnerView() {
+    return Expanded(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: Spacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildProgressSection(),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildControlsRow(),
+                  _buildVolumeRow(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  Widget  _buildListenerView() {
+    return Expanded(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: Spacing.lg),
+        child: Column(
+          spacing: Spacing.md,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildProgressSection(),
+            Expanded(
+              child: Column(
+                spacing: Spacing.lg,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _nextInQueueCard(),
+                  _buildVolumeRow(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget  _buildPreView() {
+    return Expanded(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: Spacing.lg),
+        child: Column(
+          spacing: Spacing.md,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildProgressSection(),
+            Expanded(
+              child: Column(
+                spacing: Spacing.md,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _nextInQueueCard(),
+                  _joinRoomButton(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget  _returnRightView() {
+    if (!_isListener) {
+      return _buildPreView();
+    } else if (!_isOwner) {
+      return _buildListenerView();
+    }
+    return _buildOwnerView();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final roomState = ref.watch(roomProvider);
+
+    _isListener = roomState.currentRoom == null || widget.room.id != roomState.currentRoom!.id ? false : true;
+    _isOwner = widget.room.owner != authState.user?.username ? false : true;
+  
     return Scaffold(
       backgroundColor: Coloring.surfacePrimary,
       body: SafeArea(
@@ -595,12 +794,13 @@ class _RoomPageState extends ConsumerState<RoomPage>
               colors: widget.room.gradientColor!.map((toElement) => toElement.withValues(alpha: 0.7)).toList()
             ),
           ),
-          padding: const EdgeInsets.fromLTRB(Spacing.lg, Spacing.md, Spacing.lg, Spacing.md),
+          padding: const EdgeInsets.fromLTRB(Spacing.lg, Spacing.md, Spacing.lg, 0),
           child: Column(
-            spacing: Spacing.sm,
+            spacing: Spacing.xs,
             children: [
               _buildHeader(),
               Expanded(
+                flex: 2,
                 child: AnimatedBuilder(
                   animation: _animation,
                   builder: (context, child) {
@@ -626,18 +826,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
                   },
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.only(bottom: Spacing.lg),
-                child: Column(
-                  spacing: Spacing.xl,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildProgressSection(),
-                    _buildControlsRow(),
-                    _buildVolumeRow(),
-                  ],
-                ),
-              ),
+              _returnRightView(),
             ],
           ),
         ),

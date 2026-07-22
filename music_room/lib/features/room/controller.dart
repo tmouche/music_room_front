@@ -45,6 +45,7 @@ class RoomController extends Notifier<RoomState> with WidgetsBindingObserver {
   Future<void> refreshRoom() async {
     try {
       final newAvailableRooms = await _repo.getRooms();
+      // if (newAvailableRooms == null) {return ;}
       state = state.copyWith(availableRooms: newAvailableRooms);
     } catch (e) {
       logger.error('Failed to refresh rooms', error: e);
@@ -134,6 +135,7 @@ class RoomController extends Notifier<RoomState> with WidgetsBindingObserver {
   void promoteToOwner(RoomUser listener) async {
     try {
       await _repo.transferOwnership(state.currentRoom!.id, listener.id);
+      state.copyWith(currentRoom: state.currentRoom!.copyWith(owner: listener.username));
     } catch (e) {
       logger.error('Failed to transfer ownership', error: e);
       rethrow ;

@@ -2,13 +2,19 @@ import 'package:music_room/core/model/room.dart';
 import 'package:music_room/data/fake_room.dart';
 import 'package:music_room/features/room/impl_repository.dart';
 
-class MockRoomRepository extends RoomRepository{
+class MockRoomRepository extends RoomRepository {
+  MockRoomRepository()
+  : super();
 
   @override
   Future<List<Room>> getRooms() async {
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(Duration(seconds: 1));
     return [fakeRoom1, fakeRoom2, fakeRoom3, fakeRoom4, fakeRoom5, fakeRoom6, fakeRoom7];
-    return [];
+  }
+
+  @override
+  Future<List<Room>?> refreshRooms() async {
+    return null;
   }
 
   @override
@@ -48,7 +54,9 @@ class MockRoomRepository extends RoomRepository{
   Future<void>  enableLicence(String roomId) async {}
 
   @override
-  Future<void>  transferOwnership(String roomId, String newOwnerId) async {}
+  Future<void>  transferOwnership(String roomId, String newOwnerId) async {
+      print('Trasnfert ownerShip Mock');
+  }
 
   @override
   Future<String> getStreamUrl(String trackId) async {

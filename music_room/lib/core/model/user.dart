@@ -17,6 +17,9 @@ class User {
     this._privacyLevel = 'Friends',
   });
 
+  String? get email => _email;
+  String  get username => _username;
+
   User copyWith({
     String? id,
     String? username,

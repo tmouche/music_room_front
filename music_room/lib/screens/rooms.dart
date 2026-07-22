@@ -21,8 +21,6 @@ class RoomsPage extends ConsumerStatefulWidget {
 
 class _RoomsPageState extends ConsumerState<RoomsPage> {
 
-  late final List<Room> rooms;
-
   bool _isLoading = false;
 
   @override
