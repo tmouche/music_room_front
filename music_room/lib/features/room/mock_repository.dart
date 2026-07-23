@@ -1,31 +1,41 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/core/model/room.dart';
 import 'package:music_room/data/fake_room.dart';
+import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/room/impl_repository.dart';
 
 class MockRoomRepository extends RoomRepository {
-  MockRoomRepository()
-  : super();
+  MockRoomRepository(this._ref)
+  : super() {
+    allRooms = [fakeRoom1, fakeRoom2, fakeRoom3, fakeRoom4, fakeRoom5, fakeRoom6, fakeRoom7];
+  }
+
+  final Ref       _ref;
+  late List<Room> allRooms;
 
   @override
   Future<List<Room>> getRooms() async {
     await Future.delayed(Duration(seconds: 1));
-    return [fakeRoom1, fakeRoom2, fakeRoom3, fakeRoom4, fakeRoom5, fakeRoom6, fakeRoom7];
+    return allRooms;
   }
 
   @override
   Future<List<Room>?> refreshRooms() async {
-    return null;
+    return allRooms;
   }
 
   @override
   Future<Room> createRoom() async {
-    final id = nextId.toString();
-    nextId += 1;
-    return Room(
+    final authState = _ref.read(authProvider);
+    
+    final id = (allRooms.length + 1).toString();
+    final newRoom = Room(
       id: id,
       name: 'Fake Vibes $id',
-      owner: 'me',
+      owner: authState.user!.username,
     );
+    allRooms.add(newRoom);
+    return newRoom;
   }
 
   @override

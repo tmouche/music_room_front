@@ -53,14 +53,15 @@ class RoomController extends Notifier<RoomState> with WidgetsBindingObserver {
     }
   }
 
-  Future<Room> createRoom() async {
+  Future<void> createRoom() async {
     try {
       final newRoom = await _repo.createRoom();
-      final newAvailableRooms = state.availableRooms;
-      newAvailableRooms.add(newRoom);
-      state = state.copyWith(availableRooms: newAvailableRooms);  
       await openRoom(newRoom);
-      return newRoom;
+      state = state.copyWith(
+        availableRooms: [...state.availableRooms, newRoom],
+        currentRoom: newRoom,
+      );
+      unawaited(refreshRoom());
     } catch (e) {
       logger.error('Failed to create room', error: e);
       rethrow;

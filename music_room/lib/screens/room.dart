@@ -515,11 +515,13 @@ class _RoomPageState extends ConsumerState<RoomPage>
   }
 
   Widget _buildProgressSection() {
+    final currentSec = widget.room.currentTrack?.duration.inSeconds ?? 0;
+    final currentMin = widget.room.currentTrack?.duration.inMinutes ?? 0;
     return Column(
       spacing: Spacing.xxs,
       children: [
         LinearProgressIndicator(
-          value: widget.room.currentPosition.inSeconds / widget.room.currentTrack!.duration.inSeconds,
+          value: widget.room.currentPosition.inSeconds / currentSec,
           backgroundColor: Colors.white.withValues(alpha: 0.2),
           valueColor: AlwaysStoppedAnimation(Colors.white),
           minHeight: 4,
@@ -528,7 +530,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('${widget.room.currentPosition.inMinutes}:${(widget.room.currentPosition.inSeconds % 60).toString().padLeft(2, '0')}', style: Texting.bodyMiddle),
-            Text('${widget.room.currentTrack!.duration.inMinutes}:${(widget.room.currentTrack!.duration.inSeconds % 60).toString().padLeft(2, '0')}', style: Texting.bodyMiddle)
+            Text('$currentMin:${(currentSec % 60).toString().padLeft(2, '0')}', style: Texting.bodyMiddle)
           ],
         )
       ],

@@ -10,6 +10,7 @@ import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/room/provider.dart';
 import 'package:music_room/widgets/backgrounded_icons_button.dart';
+import 'package:music_room/widgets/create_room_modal.dart';
 import 'package:music_room/widgets/room_card.dart';
 
 class RoomsPage extends ConsumerStatefulWidget {
@@ -38,8 +39,11 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
     );
   }
 
-  void _createRooms() {
-    return ;
+  void  _createRoom() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => CreateRoomModal(),
+    );
   }
 
   Future<void> _refreshRooms() async {
@@ -93,7 +97,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                         spacing: Spacing.xs,
                         children: [
                           BackgroundedIconsButton(
-                            onPressed: _createRooms,
+                            onPressed: _createRoom,
                             icon: CupertinoIcons.plus,
                             bgColor: Color.fromRGBO(239, 68, 68, 1),
                             iconSize: 25,
@@ -121,12 +125,12 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                         hintStyle: appText.bodyMedium,
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(width: 2, color: Coloring.borderFocused),
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         filled: true,
                         fillColor: Coloring.onSurfaceVarient.withValues(alpha: 0.25),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide(
                             width:  1,
                             color: Coloring.onSurfaceVarient.withValues(alpha: 0.30),

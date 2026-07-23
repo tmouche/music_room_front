@@ -16,7 +16,7 @@ void main() {
       builder: (context) => ProviderScope(
         overrides: [
           authRepositoryProvider.overrideWith((ref) => MockAuthRepository()),
-          roomRepositoryProvider.overrideWith((ref) => MockRoomRepository()),
+          roomRepositoryProvider.overrideWith((ref) => MockRoomRepository(ref)),
           webSocketRepositoryProvider.overrideWith((ref) => MockWebSocketRepository()),
         ],
         child: MusicRoomApp(),

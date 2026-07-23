@@ -1,7 +1,14 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/core/model/queue_item.dart';
 import 'package:music_room/core/model/room_user.dart';
 import 'package:music_room/core/model/track.dart';
+
+List<Color> giveRandomCardColor() {
+  var random = Random();
+  return Coloring.cardColors[random.nextInt(Coloring.cardColors.length)];
+}
 
 class Room {
   Room({
@@ -15,9 +22,9 @@ class Room {
     this._queue = const [],
     this._status = 0,
     this._currentTrack,
-    this._gradientColor,
+    List<Color>? gradientColor,
     DateTime? updatedAt,
-  }) : _updatedAt = updatedAt ?? DateTime.now().toUtc();
+  }) : _updatedAt = updatedAt ?? DateTime.now().toUtc(), _gradientColor = gradientColor ?? giveRandomCardColor();
 
   final String          _id;
   final String          _name;
@@ -41,7 +48,6 @@ class Room {
   List<RoomUser> get listeners => _listeners;
   bool get isPublic => _isPublic;
   bool get isLicensed => _isLicensed;
-
 
   int get people => _listeners.length;
 

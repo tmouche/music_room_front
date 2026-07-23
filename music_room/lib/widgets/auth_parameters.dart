@@ -68,7 +68,7 @@ class AuthParameters extends StatelessWidget {
 class AuthField extends StatefulWidget {
   const AuthField({
     super.key,
-    required this.title,
+    this.title,
     required this.icon,
     required this.hint,
     required this.controller,
@@ -77,7 +77,7 @@ class AuthField extends StatefulWidget {
     this.keyboardType ,
   });
 
-  final String title;
+  final String? title;
   final Icon icon;
   final String hint;
   final TextEditingController controller;
@@ -144,10 +144,10 @@ class AuthFieldState extends State<AuthField>
       return Column(
         spacing: Spacing.xs,
         children: [
-          Align(
+          if (widget.title != null) Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              widget.title,
+              widget.title!,
               style: Texting.titleSmall,
             ),
           ),
@@ -157,7 +157,7 @@ class AuthFieldState extends State<AuthField>
               return Transform.translate(
                 offset: Offset(sin(_shakeAnimation.value * pi) * 8, 0),
                 child: SizedBox(
-                  height: 45,
+                  height: 40,
                   child: TextField(
                     controller: widget.controller,
                     textInputAction: widget.textInputAction,
@@ -175,7 +175,7 @@ class AuthFieldState extends State<AuthField>
                       filled: true,
                       fillColor: Coloring.onSurfaceVarient.withValues(alpha: 0.15),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide(
                           width: _isFocused ? 2 : 1,
                           color: _colorAnimation.value ?? Coloring.borderPrimary
