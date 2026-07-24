@@ -6,12 +6,13 @@ import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
 import 'package:music_room/widgets/backgrounded_icons_button.dart';
+import 'package:music_room/widgets/search_modal.dart';
 
 void showFriendModal(BuildContext context) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent,
+    backgroundColor: const Color.from(alpha: 0, red: 0, green: 0, blue: 0),
     builder: (_) => FriendModal()
   );
 }

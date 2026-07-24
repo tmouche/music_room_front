@@ -225,6 +225,10 @@ class RoomController extends Notifier<RoomState> with WidgetsBindingObserver {
     }
   }
 
+  Future<Map<String, dynamic>>  searchTrack(String query) async {
+    return await _repo.searchTrack(query);
+  }
+
   Future<void>  onUpdatePlaying(Map<String, dynamic> payload, bool isPlaying) async {
       final newRoom = state.currentRoom!.copyWith(
         status: isPlaying ? 1 : 0

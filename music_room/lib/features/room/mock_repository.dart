@@ -52,6 +52,66 @@ class MockRoomRepository extends RoomRepository {
   ) async {}
 
   @override
+  Future<Map<String, dynamic>>  searchTrack(
+    String query
+  ) async {
+    return {
+      "data": {
+        "items": [
+          {
+            'id': '1',
+            'title': 'fakeTitle1',
+            'artist': 'fakeArtist1',
+            'duration': 200
+          },
+          {
+            'id': '2',
+            'title': 'fakeTitle2',
+            'artist': 'fakeArtist2',
+            'duration': 200
+          },
+          {
+            'id': '3',
+            'title': 'fakeTitle3',
+            'artist': 'fakeArtist3',
+            'duration': 200
+          },
+          {
+            'id': '4',
+            'title': 'fakeTitle4',
+            'artist': 'fakeArtist4',
+            'duration': 200
+          },
+          {
+            'id': '5',
+            'title': 'fakeTitle5',
+            'artist': 'fakeArtist5',
+            'duration': 200
+          },
+          {
+            'id': '6',
+            'title': 'fakeTitle6',
+            'artist': 'fakeArtist6',
+            'duration': 200
+          },
+          {
+            'id': '7',
+            'title': 'fakeTitle7',
+            'artist': 'fakeArtist7',
+            'duration': 200
+          },
+          {
+            'id': '8',
+            'title': 'fakeTitle8',
+            'artist': 'fakeArtist8',
+            'duration': 200
+          },
+        ]
+      }
+    };
+  }
+
+  @override
   Future<void>  privatize(String roomId) async {}
 
   @override

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/core/model/room.dart';
+import 'package:music_room/core/model/track.dart';
 import 'package:music_room/core/network/api_client.dart';
 import 'package:music_room/core/network/api_path.dart';
 import 'package:music_room/core/utils/exception.dart';
@@ -52,6 +53,15 @@ class RoomRepository {
       ApiPath.roomsTrackManage(roomId),
       body: {'id': trackId, 'new_position': newPosition}
     );
+  }
+
+  Future<Map<String, dynamic>> searchTrack(
+    String query
+  ) async {
+    final encodedQuery = Uri.encodeComponent(query);
+    final response = await ApiClient.get(ApiPath.hifiSearchTrack(encodedQuery));
+
+    return response;
   }
 
   Future<void> privatize(String roomId) async {

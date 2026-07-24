@@ -20,6 +20,8 @@ import 'package:music_room/widgets/backgrounded_icons_button.dart';
 import 'package:music_room/widgets/friend_modal.dart';
 import 'package:music_room/widgets/glass_pop_menu.dart';
 import 'package:music_room/widgets/listener_card.dart';
+import 'package:music_room/widgets/music_list.dart';
+import 'package:music_room/widgets/search_modal.dart';
 import 'package:music_room/widgets/track_card.dart';
 
 class RoomPage extends ConsumerStatefulWidget {
@@ -125,11 +127,27 @@ class _RoomPageState extends ConsumerState<RoomPage>
   }
 
   void  _onAddMusicButton() {
-    return ;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SearchModal(
+        topic: "Musics",
+        sourceBuilder: musicSearchView
+      )
+    );
   }
 
   void  _onInviteButton() {
-    showFriendModal(context);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SearchModal(
+        topic: "Friends",
+        sourceBuilder: musicSearchView
+      )
+    );
   }
 
   Future<void>  _onJoinRoom() async {

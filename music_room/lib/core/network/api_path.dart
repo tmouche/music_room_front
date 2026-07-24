@@ -22,6 +22,8 @@ class ApiPath {
   static String roomsOwnershipTransfert(String roomId) => '$rooms/$roomId/transfer-ownership';
   static String roomsWebSocket(String roomId) => '$rooms/$roomId/ws';
 
+  static const String hifi = "/hifi";
+  static String hifiSearchTrack(String encodedQuery) => '$hifi/search/$encodedQuery';
   static String hifiTrackStream(String trackId) => '/hifi/track/$trackId/stream-url';
 
 }

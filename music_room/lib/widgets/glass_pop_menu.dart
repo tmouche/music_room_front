@@ -18,9 +18,14 @@ class GlassPopMenuItem {
 }
 
 class GlassPopMenu extends StatefulWidget {
-  const GlassPopMenu({super.key, required this.items});
+  const GlassPopMenu({
+    super.key,
+    required this.items,
+    bool? baseFilled,
+  }): _baseFilled = baseFilled ?? true;
 
-  final List<GlassPopMenuItem> items;
+  final List<GlassPopMenuItem>  items;
+  final bool                    _baseFilled;
 
   @override
   State<GlassPopMenu> createState() => _GlassPopMenuState();
@@ -79,6 +84,7 @@ class _GlassPopMenuState extends State<GlassPopMenu>
           size: _buttonSize,
           icon: Icons.more_vert,
           onTap: _open,
+          baseFilled: widget._baseFilled,
         ),
       ),
     );
@@ -171,6 +177,7 @@ class _GlassPopMenuState extends State<GlassPopMenu>
             icon: Icons.more_vert,
             onTap: _close,
             filled: true,
+            baseFilled: widget._baseFilled,
           ),
         ),
       ],
@@ -206,6 +213,7 @@ class _GlassRoundButton extends StatelessWidget {
     required this.icon,
     required this.onTap,
     this.filled = false,
+    this.baseFilled = true,
   });
 
   final double size;
@@ -214,6 +222,7 @@ class _GlassRoundButton extends StatelessWidget {
   // Version "ouverte" du bouton, integree au menu : fond plus present
   // et bord blanc assortis au panneau.
   final bool filled;
+  final bool baseFilled;
 
   @override
   Widget build(BuildContext context) {
@@ -233,7 +242,7 @@ class _GlassRoundButton extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: filled
                     ? Colors.white.withValues(alpha: 0.15)
-                    : Coloring.onSurfaceVarientMuted,
+                    : baseFilled ? Coloring.onSurfaceVarientMuted : Colors.transparent,
                 border: filled
                     ? Border.all(
                         color: Colors.white.withValues(alpha: 0.5),
