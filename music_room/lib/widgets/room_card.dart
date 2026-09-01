@@ -1,6 +1,3 @@
-
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -80,7 +77,12 @@ class _RoomCardState extends ConsumerState<RoomCard> {
 }
 
 class AddRoomCard extends StatelessWidget {
-  const AddRoomCard({super.key});
+  const AddRoomCard({
+    super.key,
+    required this.onTap
+  });
+
+  final VoidCallback  onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +95,7 @@ class AddRoomCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      onPressed: () => context.pushReplacement('/create'),
+      onPressed: onTap,
       child: Container(
         width: double.infinity,
         height: 200,

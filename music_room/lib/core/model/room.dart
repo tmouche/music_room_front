@@ -65,6 +65,8 @@ class Room {
     );
   }
 
+  static const _unset = Object();
+
   Room copyWith({
     String? id,
     String? name,
@@ -75,7 +77,7 @@ class Room {
     Duration? positionAtLastSync,
     List<QueueItem>? queue,
     int? status,
-    Track? currentTrack,
+    Object? currentTrack = _unset,
     List<Color>? gradientColor,
     DateTime? updatedAt,
   }) {
@@ -89,7 +91,7 @@ class Room {
       positionAtLastSync: positionAtLastSync ?? _positionAtLastSync,
       queue: queue ?? _queue,
       status: status ?? _status,
-      currentTrack: currentTrack ?? _currentTrack,
+      currentTrack:  identical(currentTrack, _unset) ? _currentTrack : currentTrack as Track?,
       gradientColor: gradientColor ?? _gradientColor,
       updatedAt: updatedAt ?? _updatedAt,
     );

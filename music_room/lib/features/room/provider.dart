@@ -10,3 +10,9 @@ final roomRepositoryProvider = Provider<RoomRepository>((ref) {
 final roomProvider = NotifierProvider<RoomController, RoomState>(
   () => RoomController(),
 );
+
+final playerPositionProvider = StreamProvider<Duration>((ref) {
+  final repo = ref.watch(roomRepositoryProvider);
+  return repo.positionStream;
+});
+

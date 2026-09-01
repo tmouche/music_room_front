@@ -4,7 +4,7 @@ import 'package:music_room/core/model/track_cache.dart';
 class QueueItem {
   final String _id;
   final String _roomId;
-  final String _trackId;
+  final int _trackId;
   final double _position;
   final Track _track;
 
@@ -18,7 +18,7 @@ class QueueItem {
 
   String get id => _id;
   String get roomId => _roomId;
-  String get trackId => _trackId;
+  int get trackId => _trackId;
   double get position => _position;
   Track get track => _track;
 

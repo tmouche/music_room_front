@@ -13,15 +13,13 @@ import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/auth/provider.dart';
-import 'package:music_room/features/auth/state.dart';
 import 'package:music_room/features/room/provider.dart';
-import 'package:music_room/features/room/state.dart';
 import 'package:music_room/widgets/backgrounded_icons_button.dart';
-import 'package:music_room/widgets/friend_modal.dart';
 import 'package:music_room/widgets/glass_pop_menu.dart';
 import 'package:music_room/widgets/listener_card.dart';
 import 'package:music_room/widgets/music_list.dart';
 import 'package:music_room/widgets/search_modal.dart';
+import 'package:music_room/widgets/seek_bar.dart';
 import 'package:music_room/widgets/track_card.dart';
 
 class RoomPage extends ConsumerStatefulWidget {
@@ -40,6 +38,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
   with SingleTickerProviderStateMixin {
 
   static const double _collapsedHeaderHeight = 70.0;
+  static const double _modalMinHeight = 60.0;
 
   late final AnimationController _controller = AnimationController(
     vsync: this,
@@ -53,7 +52,9 @@ class _RoomPageState extends ConsumerState<RoomPage>
   late bool _isListener;
   late bool _isOwner;
 
-  bool _isPlaying = true;
+  late Room _room;
+
+  bool _isPlaying = false;
   bool _isModalOpen = false;
   bool _isUserModal = false;
 
@@ -80,7 +81,26 @@ class _RoomPageState extends ConsumerState<RoomPage>
   }
 
   Future<void>  _togglePlaying() async {
-    setState(() => _isPlaying = !_isPlaying);
+
+    setState(() => _isLoading = true);
+
+    try {
+      if (ref.read(roomProvider).currentRoom?.currentTrack != null) {
+        if (_isPlaying) {
+          await ref.read(roomProvider.notifier).pauseTrack();
+        } else {
+          await ref.read(roomProvider.notifier).playTrack();
+        }
+      }
+    } on ApiException catch (e) {
+      logger.debug('API Error on privatizing room: $e');
+      if (mounted) UiUtils.showError(context, 'Privatize Room Failed, Server Error.');
+    } catch (e) {
+      logger.debug('Error on Privatize Room: $e');
+      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void  _toggleUserModal() {
@@ -118,12 +138,36 @@ class _RoomPageState extends ConsumerState<RoomPage>
     }
   }
 
-  Future<void>  skipPrev() async {
-    return ;
+  Future<void>  _onSkipPrev() async {
+    setState(() => _isLoading = true);
+
+    try {
+      ref.read(roomProvider.notifier).skipPrevTrack();
+    } on ApiException catch (e) {
+      logger.debug('API Error on SkipPrev: $e');
+      if (mounted) UiUtils.showError(context, 'SkipPrev, Server Error.');
+    } catch (e) {
+      logger.debug('Error on SkipPrev: $e');
+      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
-  Future<void>  skipNext() async {
-    return ;
+  Future<void>  _onSkipNext() async {
+    setState(() => _isLoading = true);
+
+    try {
+      ref.read(roomProvider.notifier).skipNextTrack();
+    } on ApiException catch (e) {
+      logger.debug('API Error on SkipNext: $e');
+      if (mounted) UiUtils.showError(context, 'SkipNext, Server Error.');
+    } catch (e) {
+      logger.debug('Error on SkipNext: $e');
+      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void  _onAddMusicButton() {
@@ -152,7 +196,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
 
   Future<void>  _onJoinRoom() async {
     try {
-      await ref.read(roomProvider.notifier).openRoom(widget.room);
+      await ref.read(roomProvider.notifier).joinRoom(widget.room);
     } catch (e) {
       logger.error("Error during joining the room");
       logger.debug("Detail: $e");
@@ -162,8 +206,18 @@ class _RoomPageState extends ConsumerState<RoomPage>
   Future<void>  _onLeaveRoom() async {
     try {
       await ref.read(roomProvider.notifier).leaveRoom();
+      if (mounted) context.pop();
     } catch (e) {
       logger.error("Error during leaving the room");
+      logger.debug("Detail: $e");
+    }
+  }
+
+  Future<void>  _onReorderingList(int oldPos, int newPos) async {
+    try {
+      await ref.read(roomProvider.notifier).reorderQueueItem(oldPos, newPos);
+    } catch (e) {
+      logger.error("Error during reordering the roomQueue");
       logger.debug("Detail: $e");
     }
   }
@@ -181,26 +235,27 @@ class _RoomPageState extends ConsumerState<RoomPage>
         Row(
           spacing: Spacing.md,
           children: [
-            BackgroundedIconsButton(
+            if (context.canPop()) BackgroundedIconsButton(
               onPressed: () => context.pop(),
               icon: CupertinoIcons.chevron_down,
               iconSize: 30,
               boxPadding: 5,
             ),
             Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('PLAYING FROM', style: Texting.bodyMiddle),
-                Text(widget.room.name, style: Texting.titleSmall)
+                Text(_room.name, style: Texting.titleSmall)
               ],
             ),
           ],
         ),
         if (_isListener) GlassPopMenu(
           items: [
-            if (_isOwner) widget.room.isLicensed ?
+            if (_isOwner) _room.isLicensed ?
             GlassPopMenuItem(icon: Icons.speaker_notes_off, label: 'Unlicense')
             : GlassPopMenuItem(icon: Icons.speaker_notes, label: 'License'),
-            if (_isOwner) widget.room.isPublic ?
+            if (_isOwner) _room.isPublic ?
             GlassPopMenuItem(icon: CupertinoIcons.lock, label: 'Privatize', onTap: _privatize)
             : GlassPopMenuItem(icon: CupertinoIcons.lock_open, label: 'Publish'),
             GlassPopMenuItem(icon: Icons.exit_to_app, label: 'Quit', onTap: _onLeaveRoom),
@@ -210,8 +265,51 @@ class _RoomPageState extends ConsumerState<RoomPage>
     );
   }
 
+  Widget _buildTrackInfo() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          _room.currentTrack?.title ?? 'Owner is choosing...',
+          style: Texting.titleMedium,
+          overflow: TextOverflow.ellipsis,
+        ),
+        Text(
+          _room.currentTrack?.artist ?? '...',
+          style: Texting.bodyLarge,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildListenerMenuIcons() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: Spacing.sm,
+      children: [
+        BackgroundedIconsButton(
+          onPressed: _toggleUserModal,
+          icon: CupertinoIcons.group,
+          iconSize: 22,
+          boxPadding: 5,
+        ),
+        BackgroundedIconsButton(
+          onPressed: _toggleMusicModal,
+          icon: CupertinoIcons.music_note_list,
+          iconSize: 22,
+          boxPadding: 5,
+        ),
+      ],
+    );
+  }
+
   Widget _buildCoverHeader(double t) {
-    return Stack(      
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final infoWidth = constraints.maxWidth - 70 - 12;
+        return Stack(
       children: [
         Padding(
           padding: EdgeInsets.only(top: lerpDouble(0, Spacing.xs, t)!),
@@ -224,6 +322,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   width: lerpDouble(230, 70, t),
@@ -241,9 +340,9 @@ class _RoomPageState extends ConsumerState<RoomPage>
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: widget.room.currentTrack?.imageUrl != null
+                    child: _room.currentTrack?.imageUrl != null
                         ? CachedNetworkImage(
-                            imageUrl: widget.room.currentTrack!.imageUrl!,
+                            imageUrl: _room.currentTrack!.imageUrl!,
                             fit: BoxFit.cover,
                           )
                         : Container(
@@ -259,26 +358,21 @@ class _RoomPageState extends ConsumerState<RoomPage>
                 ),
                 SizedBox(width: lerpDouble(0, 12, t)),
                 Opacity(
-                  opacity: t.clamp(0.0, 1.0),
+                  opacity: ((t - 0.6) / 0.4).clamp(0.0, 1.0),
                   child: SizedBox(
-                    width: lerpDouble(0, 250, t),
-                    child: t > 0.1 ?
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            widget.room.currentTrack?.title ?? '...',
-                            style: Texting.titleMedium,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            widget.room.currentTrack?.artist ?? '...',
-                            style: Texting.bodyLarge,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                    ) : null,
+                    width: lerpDouble(0, infoWidth, t),
+                    child: Row(
+                      spacing: Spacing.sm,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(child: _buildTrackInfo()),
+                        if (_isListener) FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: _buildListenerMenuIcons(),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -291,58 +385,25 @@ class _RoomPageState extends ConsumerState<RoomPage>
             offset: Offset(0, lerpDouble(0, -60, t)!),
             child: Opacity(
               opacity: (1 - t * 3).clamp(0.0, 1.0),
-              child: t < 0.9 ? Container(
+              child: Container(
                 alignment: Alignment.bottomLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      widget.room.currentTrack?.title ?? '',
-                      style: Texting.titleMedium,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      widget.room.currentTrack?.artist ?? '',
-                      style: Texting.bodyLarge,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                )
-              ) : null,
+                child: _buildTrackInfo(),
+              ),
             ),
           ),
         ),
-        Align(
-          alignment: Alignment.lerp(
-            Alignment.bottomRight,
-            Alignment.centerRight,
-            t,
-          )!,
-          child: _isListener ? Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: Spacing.sm,
-            children: [
-              BackgroundedIconsButton(
-                onPressed: _toggleUserModal,
-                icon: CupertinoIcons.group,
-                iconSize: 22,
-                boxPadding: 5,
-              ),
-              BackgroundedIconsButton(
-                onPressed: _toggleMusicModal,
-                icon: CupertinoIcons.music_note_list,
-                iconSize: 22,
-                boxPadding: 5,
-              ),
-            ],
-          ) : null
+        if (_isListener) Align(
+          alignment: Alignment.bottomRight,
+          child: Opacity(
+            opacity: (1 - t * 3).clamp(0.0, 1.0),
+            child: _buildListenerMenuIcons(),
+          ),
         ),
       ],
+        );
+      },
     );
   }
-
-  static const double _modalMinHeight = 60.0;
 
   Widget _buildModal(double t) {
     return Opacity(
@@ -373,7 +434,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                   Text('User List', style: Texting.titleMiddle),
-                  Text('${widget.room.people} ${widget.room.people == 1 ? 'listener' : 'listeners'}', style: Texting.bodyMedium)
+                  Text('${_room.people} ${_room.people == 1 ? 'listener' : 'listeners'}', style: Texting.bodyMedium)
               ],
             ),
             if (_isOwner) TextButton(
@@ -404,10 +465,10 @@ class _RoomPageState extends ConsumerState<RoomPage>
           child: SingleChildScrollView(
             child: Column(
               spacing: Spacing.md,
-              children: widget.room.listeners.map(
+              children: _room.listeners.map(
                 (toElement) => ListenerCard(
                   listener: toElement,
-                  isOwner: toElement.username == widget.room.owner,
+                  isOwner: toElement.username == _room.owner,
                   amIOwner: _isOwner,
                 )
               ).toList(),
@@ -429,7 +490,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                       Text('Up Next', style: Texting.titleMiddle),
-                      Text('${widget.room.queue.length} songs', style: Texting.bodyMedium)
+                      Text('${_room.queue.length} songs', style: Texting.bodyMedium)
                   ],
                 ),
                 if (_isOwner) TextButton(
@@ -510,19 +571,18 @@ class _RoomPageState extends ConsumerState<RoomPage>
                           },
                         );
                       },
-                      itemCount: widget.room.queue.length,
+                      itemCount: _room.queue.length,
                       itemBuilder: (context, index) {
                         return Padding(
-                          key: ValueKey(widget.room.queue[index].id),
+                          key: ValueKey(_room.queue[index].id),
                           padding: EdgeInsets.symmetric(vertical: Spacing.sm / 2),
                           child: TrackCard(
-                            queueItem: widget.room.queue[index],
+                            queueItem: _room.queue[index],
                             index: index,
                           ),
                         );
                       },
-                      onReorderItem: (oldIndex, newIndex) {
-                      },
+                      onReorderItem: _onReorderingList,
                     ),
                   ),
                 ],
@@ -532,35 +592,12 @@ class _RoomPageState extends ConsumerState<RoomPage>
     );
   }
 
-  Widget _buildProgressSection() {
-    final currentSec = widget.room.currentTrack?.duration.inSeconds ?? 0;
-    final currentMin = widget.room.currentTrack?.duration.inMinutes ?? 0;
-    return Column(
-      spacing: Spacing.xxs,
-      children: [
-        LinearProgressIndicator(
-          value: widget.room.currentPosition.inSeconds / currentSec,
-          backgroundColor: Colors.white.withValues(alpha: 0.2),
-          valueColor: AlwaysStoppedAnimation(Colors.white),
-          minHeight: 4,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('${widget.room.currentPosition.inMinutes}:${(widget.room.currentPosition.inSeconds % 60).toString().padLeft(2, '0')}', style: Texting.bodyMiddle),
-            Text('$currentMin:${(currentSec % 60).toString().padLeft(2, '0')}', style: Texting.bodyMiddle)
-          ],
-        )
-      ],
-    );
-  }
-
   Widget _buildControlsRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         TextButton(
-          onPressed: skipPrev,
+          onPressed: _onSkipPrev,
           child: Icon(CupertinoIcons.backward_end, color: Coloring.onSurface, size: 32),
         ),
         TextButton(
@@ -583,7 +620,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
           )
         ),
         TextButton(
-          onPressed: skipNext,
+          onPressed: _onSkipNext,
           child: Icon(CupertinoIcons.forward_end, color: Coloring.onSurface, size: 32),
         ),
       ],
@@ -591,8 +628,6 @@ class _RoomPageState extends ConsumerState<RoomPage>
   }
 
   Widget _buildVolumeRow() {
-    // Pendant le reglage du volume, toute la rangee grossit et passe
-    // en onSurface, puis revient a sa taille/couleur d'origine.
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(end: _isVolumeDragging ? 1.0 : 0.0),
       duration: const Duration(milliseconds: 200),
@@ -616,7 +651,10 @@ class _RoomPageState extends ConsumerState<RoomPage>
                     value: audioVolume,
                     min: 0,
                     max:  100,
-                    onChanged: (value) => setState(() => audioVolume = value),
+                    onChanged: (value) {
+                      setState(() => audioVolume = value);
+                      ref.read(roomProvider.notifier).setVolume(value / 100);
+                    },
                     onChangeStart: (_) => setState(() => _isVolumeDragging = true),
                     onChangeEnd: (_) => setState(() => _isVolumeDragging = false),
                     activeColor: iconColor,
@@ -670,9 +708,9 @@ class _RoomPageState extends ConsumerState<RoomPage>
             height: 55,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: widget.room.currentTrack?.imageUrl != null
+              child: _room.currentTrack?.imageUrl != null
                   ? CachedNetworkImage(
-                      imageUrl: widget.room.currentTrack!.imageUrl!,
+                      imageUrl: _room.currentTrack!.imageUrl!,
                       fit: BoxFit.cover,
                     )
                   : Container(
@@ -692,12 +730,12 @@ class _RoomPageState extends ConsumerState<RoomPage>
             children: [
               Text('UP NEXT', style: Texting.bodyMiddleTrans),
               Text(
-                widget.room.currentTrack?.title ?? 'Nothing queued',
+                _room.currentTrack?.title ?? 'Nothing queued',
                 style: Texting.bodyLarge.copyWith(color: Coloring.onSurface),
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                widget.room.currentTrack?.artist ?? '...',
+                _room.currentTrack?.artist ?? '...',
                 style: Texting.bodyMiddleTrans,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -716,7 +754,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildProgressSection(),
+            const RepaintBoundary(child: SeekBar()),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -742,7 +780,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
           spacing: Spacing.md,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildProgressSection(),
+            const RepaintBoundary(child: SeekBar()),
             Expanded(
               child: Column(
                 spacing: Spacing.lg,
@@ -767,7 +805,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
           spacing: Spacing.md,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildProgressSection(),
+            const RepaintBoundary(child: SeekBar()),
             Expanded(
               child: Column(
                 spacing: Spacing.md,
@@ -795,11 +833,30 @@ class _RoomPageState extends ConsumerState<RoomPage>
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(roomProvider.select((s) => s.roomClosedMessage), (_, message) {
+      if (message == null) return;
+      ref.read(roomProvider.notifier).clearRoomClosedMessage();
+      UiUtils.showError(context, message);
+      if (context.canPop()) context.pop();
+    });
+    ref.listen(roomProvider.select((s) => s.playerErrorMessage), (_, message) {
+      if (message == null) return;
+      ref.read(roomProvider.notifier).clearPlayerErrorMessage();
+      UiUtils.showError(context, message);
+    });
+
     final authState = ref.watch(authProvider);
     final roomState = ref.watch(roomProvider);
 
-    _isListener = roomState.currentRoom == null || widget.room.id != roomState.currentRoom!.id ? false : true;
-    _isOwner = widget.room.owner != authState.user?.username ? false : true;
+    _isPlaying = roomState.isPlaying;
+    if (!_isVolumeDragging) audioVolume = roomState.volume * 100;
+
+    final currentRoom = roomState.currentRoom;
+    _room = (currentRoom != null && currentRoom.id == widget.room.id)
+        ? currentRoom
+        : widget.room;
+    _isListener = currentRoom != null && currentRoom.id == widget.room.id;
+    _isOwner = _room.owner == authState.user?.id;
   
     return Scaffold(
       backgroundColor: Coloring.surfacePrimary,

@@ -8,7 +8,7 @@
             "name": "music_room",
             "request": "launch",
             "type": "dart",
-            "program": "lib/main_dev.dart"
+            "program": "lib/main_dev.dart",
         },
         {
             "name": "music_room (profile mode)",

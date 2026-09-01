@@ -1,7 +1,7 @@
 import 'package:music_room/core/model/track_cache.dart';
 
 class Track {
-  final String _id;
+  final int _id;
   final String _title;
   final String _artist;
   final String? _imageUrl;
@@ -18,7 +18,7 @@ class Track {
         'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
   });
 
-  String get id => _id;
+  int get id => _id;
   String get title => _title;
   String get artist => _artist;
   String? get imageUrl => _imageUrl;
@@ -52,7 +52,7 @@ class Track {
   }
 
   Track copyWith({
-    String? id,
+    int? id,
     String? title,
     String? artiste,
     String? imageUrl,

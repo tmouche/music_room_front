@@ -226,33 +226,36 @@ class _GlassRoundButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final button = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: filled
+            ? Colors.white.withValues(alpha: 0.15)
+            : baseFilled ? Coloring.onSurfaceVarientMuted : Colors.transparent,
+        border: filled
+            ? Border.all(
+                color: Colors.white.withValues(alpha: 0.5),
+                width: 1,
+              )
+            : null,
+      ),
+      child: Icon(icon, size: 20, color: Coloring.onSurface),
+    );
     return GestureDetector(
       onTap: onTap,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: ClipOval(
-          child: BackdropFilter(
-            filter: filled
-                ? ImageFilter.blur(sigmaX: 30, sigmaY: 30)
-                : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-            child: Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: filled
-                    ? Colors.white.withValues(alpha: 0.15)
-                    : baseFilled ? Coloring.onSurfaceVarientMuted : Colors.transparent,
-                border: filled
-                    ? Border.all(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        width: 1,
-                      )
-                    : null,
-              ),
-              child: Icon(icon, size: 20, color: Coloring.onSurface),
-            ),
-          ),
+          // BackdropFilter forces a backdrop capture on every repaint even
+          // with a zero sigma, so it is only mounted when the blur is real.
+          child: filled
+              ? BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                  child: button,
+                )
+              : button,
         ),
       ),
     );

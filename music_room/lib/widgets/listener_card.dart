@@ -31,7 +31,7 @@ class _ListenerCardState extends ConsumerState<ListenerCard> {
 
   Future<void>  _onGiveOwnership() async {
     try {
-      ref.read(roomProvider.notifier).promoteToOwner(widget._listener);
+      ref.read(roomProvider.notifier).promoteToOwnerRoom(widget._listener);
     } on ApiException catch (e) {
       logger.debug('API Error on give ownership: $e');
       if (mounted) UiUtils.showError(context, 'Give Ownership Failed, Server Error.');

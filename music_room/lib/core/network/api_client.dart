@@ -15,7 +15,7 @@ final _log = AppLogger();
 class ApiClient {
   static const String baseUrl = String.fromEnvironment(
     'BACKEND_URL',
-    defaultValue: 'http://192.168.1.29:3000',
+    defaultValue: 'http://0.0.0.0:3000',
   );
 
   /// Synchronous callback triggered on 401 after refresh failure.
@@ -140,13 +140,14 @@ class _AuthInterceptor extends QueuedInterceptorsWrapper {
       final refreshToken = await ApiClient.getRefreshToken();
 
       if (refreshToken != null) {
+        final String newAccessToken;
         try {
           final response = await _refreshDio.post(
             '/auth/refresh',
             data: {'refresh_token': refreshToken},
           );
 
-          final newAccessToken = response.data['access_token'];
+          newAccessToken = response.data['access_token'];
           final newRefreshToken = response.data['refresh_token'];
 
           await SessionStorage.saveSession(
@@ -155,14 +156,24 @@ class _AuthInterceptor extends QueuedInterceptorsWrapper {
           );
 
           _log.debug('Token refreshed successfully');
-          err.requestOptions.headers['Authorization'] =
-              'Bearer $newAccessToken';
-
-          final retryResponse = await ApiClient._dio.fetch(err.requestOptions);
-          return handler.resolve(retryResponse);
         } catch (e) {
           _log.error('Token refresh failed', error: e);
           ApiClient.onUnauthorized?.call();
+          return handler.reject(err);
+        }
+
+        err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+
+        try {
+          // The retry must NOT go through ApiClient._dio: this queued
+          // interceptor serializes error handling, so an error on the retried
+          // request would wait behind this very handler — deadlocking every
+          // subsequent request. _refreshDio has no interceptor.
+          final retryResponse = await _refreshDio.fetch(err.requestOptions);
+          return handler.resolve(retryResponse);
+        } on DioException catch (retryErr) {
+          return handler.reject(retryErr);
+        } catch (_) {
           return handler.reject(err);
         }
       } else {

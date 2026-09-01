@@ -44,6 +44,9 @@ class _CreateRoomModalState extends ConsumerState<CreateRoomModal> {
 
     try {
       await ref.read(roomProvider.notifier).createRoom();
+      if (_isPrivate) {
+        await ref.read(roomProvider.notifier).privatizeRoom();
+      }
     }  on ApiException catch (e) {
       logger.debug('Api Error on refresh rooms: $e');
       if (mounted) UiUtils.showError(context, 'Connection Error');

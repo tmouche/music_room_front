@@ -14,7 +14,7 @@ class AuthRepository {
         constant.AUTH_LOGIN_ROUTE,
         body: {'email': email, 'password': password},
       );
-      if (!data) {
+      if (data == null) {
         logger.error('Authentication response is missing.');
         throw ApiException('No response data');
       }
@@ -28,7 +28,7 @@ class AuthRepository {
   Future<Map<String, dynamic>>  fetchUser() async {
     try {
       final data = await ApiClient.get(constant.USER_ME);
-      if (!data) {
+      if (data == null) {
         logger.error('User response is missing.');
         throw ApiException('No response data');
       }
@@ -56,8 +56,10 @@ class AuthRepository {
     }
     
     try {
+
       final GoogleSignInAccount account = await GoogleSignIn.instance
         .authenticate(scopeHint: ['email', 'profile']);
+
 
       final GoogleSignInAuthentication auth = account.authentication;
       final String? idToken = auth.idToken;
@@ -100,7 +102,7 @@ class AuthRepository {
         constant.AUTH_REGISTER,
         body: {'username': username, 'email': email, 'password': password},
       );
-      if (!data) {
+      if (data == null) {
         logger.error('Register response is missing');
         throw ApiException('No response data');
       }

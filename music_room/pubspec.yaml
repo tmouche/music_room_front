@@ -28,8 +28,7 @@ dependencies:
   just_audio_background: ^0.0.1-beta.17
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
-
-
+  shared_preferences: ^2.5.5
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -42,5 +41,4 @@ flutter:
   assets:
     - assets/images/logo.png
     - assets/images/google.png
-  
-p, color: C
+    - assets/style_card/

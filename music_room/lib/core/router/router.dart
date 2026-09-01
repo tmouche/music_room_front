@@ -1,21 +1,29 @@
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_room/core/model/room.dart';
 import 'package:music_room/features/auth/provider.dart';
+import 'package:music_room/features/room/provider.dart';
 import 'package:music_room/screens/log_in.dart';
+import 'package:music_room/screens/no_room.dart';
+import 'package:music_room/screens/profile.dart';
 import 'package:music_room/screens/room.dart';
 import 'package:music_room/screens/rooms.dart';
 import 'package:music_room/widgets/scaffold_nav_bar.dart';
-import 'package:music_room/widgets/underConstruction.dart';
 
-final routerProvider = Provider((ref) {
-  final authState = ref.watch(authProvider);
+final routerProvider = Provider<GoRouter>((ref) {
+  final authNotifier = ValueNotifier(ref.read(authProvider));
+  ref.listen(authProvider, (_, next) => authNotifier.value = next);
 
   return GoRouter(
+    refreshListenable: authNotifier,
     redirect: (context, state) {
-      if (!authState.isAuthenticated) return '/login';
-      if (state.matchedLocation == '/') return '/rooms';
+      final authState = authNotifier.value;
+      final loggingIn = state.matchedLocation == '/login';
+
+      if (!authState.isAuthenticated) return loggingIn ? null : '/login';
+      if (loggingIn || state.matchedLocation == '/') return '/rooms';
       return null;
     },
     routes: [
@@ -39,10 +47,13 @@ final routerProvider = Provider((ref) {
             ),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/search', builder: (_, __) => const UnderConstructionPage()),
-          ]),
+            GoRoute(path: '/myRoom', builder: (_, state) {
+              final currentRoom = ref.read(roomProvider).currentRoom;
+              return currentRoom != null ? RoomPage(room: currentRoom) : NoRoomPage();
+            } 
+          )]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/profile', builder: (_, __) => const UnderConstructionPage()),
+            GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
           ]),
         ]
       )

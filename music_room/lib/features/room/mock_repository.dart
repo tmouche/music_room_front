@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/core/model/room.dart';
+import 'package:music_room/core/model/room_user.dart';
+import 'package:music_room/core/model/track.dart';
 import 'package:music_room/data/fake_room.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/room/impl_repository.dart';
@@ -16,12 +18,18 @@ class MockRoomRepository extends RoomRepository {
   @override
   Future<List<Room>> getRooms() async {
     await Future.delayed(Duration(seconds: 1));
+    for (int idx = 0; idx < allRooms.length; idx++) {
+      final currentRoom = allRooms[idx];
+      if (currentRoom.people == 0) {
+        allRooms.removeAt(idx);
+      }
+    }
     return allRooms;
   }
 
   @override
-  Future<List<Room>?> refreshRooms() async {
-    return allRooms;
+  Future<List<Room>> refreshRooms() async {
+      return await getRooms();
   }
 
   @override
@@ -29,20 +37,76 @@ class MockRoomRepository extends RoomRepository {
     final authState = _ref.read(authProvider);
     
     final id = (allRooms.length + 1).toString();
+    final users = [RoomUser(id: "1", username: authState.user!.username)];
     final newRoom = Room(
       id: id,
       name: 'Fake Vibes $id',
       owner: authState.user!.username,
+      listeners: users
     );
+    
     allRooms.add(newRoom);
     return newRoom;
   }
 
   @override
-  Future<void>  addTrack(String roomId, String trackId) async {}
+  Future<void> joinRoom(String roomId) async {
+    final authState = _ref.read(authProvider);
+
+    await Future.delayed(Duration(milliseconds: 1));
+    for (int idx = 0; idx < allRooms.length; idx++) {
+      final currentRoom = allRooms[idx];
+      if (currentRoom.id == roomId) {
+        final user = RoomUser(
+          id: "${int.parse(currentRoom.listeners.last.id) + 1}",
+          username: authState.user!.username
+        );
+        currentRoom.listeners.add(user);
+        break;
+      }
+    }
+  }
 
   @override
-  Future<void>  removeTrack(String roomId, String trackId) async {}
+  Future<void> leaveRoom(String roomId) async {
+    final authState = _ref.read(authProvider);
+
+    await Future.delayed(Duration(milliseconds: 1));
+    for (int idx = 0; idx < allRooms.length; idx++) {
+      final currentRoom = allRooms[idx];
+      if (currentRoom.id == roomId) {
+        for (var listener in currentRoom.listeners) {
+          if (listener.username == authState.user!.username) {
+            currentRoom.listeners.remove(listener);
+            break;
+          }
+        }
+        break;
+      }
+    }
+  }
+
+
+  @override
+  Future<void>  privatizeRoom(String roomId) async {}
+
+  @override
+  Future<void>  publishRoom(String roomId) async {}
+
+  @override
+  Future<void>  disableLicenceRoom(String roomId) async {}
+
+  @override
+  Future<void>  enableLicenceRoom(String roomId) async {}
+
+  @override
+  Future<void>  transferOwnershipRoom(String roomId, String newOwnerId) async {}
+
+  @override
+  Future<void>  addTrack(String roomId, int trackId) async {}
+
+  @override
+  Future<void>  removeTrack(String roomId, int trackId) async {}
 
   @override
   Future<void>  reorderTrack(
@@ -112,24 +176,19 @@ class MockRoomRepository extends RoomRepository {
   }
 
   @override
-  Future<void>  privatize(String roomId) async {}
+  Future<void> startTrack(Track newTrack, Duration position) async {}
 
   @override
-  Future<void>  publish(String roomId) async {}
+  Future<Track?> getTrack(int trackId) async {}
 
   @override
-  Future<void>  disableLicence(String roomId) async {}
+  Future<void> createChannel(String roomId, String token) async {}
 
   @override
-  Future<void>  enableLicence(String roomId) async {}
+  Future<void> deleteChannel() async {}
 
   @override
-  Future<void>  transferOwnership(String roomId, String newOwnerId) async {
-      print('Trasnfert ownerShip Mock');
-  }
-
-  @override
-  Future<String> getStreamUrl(String trackId) async {
+  Future<String> getStreamUrl(int trackId) async {
     return "fakeStreamUrl";
   }
 }

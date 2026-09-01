@@ -1,0 +1,31 @@
+- Une room vide devrait etre close
+- Les boutons pour choose la musique sont pas set
+- La liste ami est sur link à celle des musiques
+
+
+- Log in google est broke
+- il faut rajouter le ENTER quand on a fini d ecrire parce que c est chiant sinon
+- Dans la liste de Musics les noms trop long clip, il faut mettre elipse machin chouette
+
+- Enlever le give ownership pour un user qui est deja owner
+- Le timestamp se met pas à jour et la musique finit par couper
+- La carte est pas mise à jour non plus
+- Attention pour privatizer faut etre sub !!!
+
+- Y a plein de bug lorsqu il y a plusieurs clients connécté en meme temps
+    - Reproduction du bug -> 
+        Ouvrir une Room par User
+        Lancer Musique 1 dans la room et en mettre Musique 2 dans la queue
+        Rejoindre la room avec User 2
+        SkipNext Musique 1
+        Le User 1 bug et n a plus aucune musique,
+        Le User 2 peut leave la room, revenir et profiter de la musique 2
+
+- Lorsqu on a fait Play et que la track se lance si on en add une dans la queue ca remplasse direct celle qui etait en cours
+
+- Error 500 sur la reorganisation des tracks dans la queue + Ca s affiche pas pour les autres.
+- La pause met en pause que localement
+- Quand y a 2+ personnes dans la room le changement crash
+
+Il faut encore faire les notifications
+Il faut encore faire les profiles

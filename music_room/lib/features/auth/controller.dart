@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/core/model/user.dart';
+import 'package:music_room/core/network/api_client.dart';
 import 'package:music_room/core/storage/session_storage.dart';
 import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
@@ -16,7 +17,16 @@ class AuthController extends Notifier<AuthState> {
   @override
   AuthState build() {
     _repo = ref.read(authRepositoryProvider);
-    return AuthState();
+    ApiClient.onUnauthorized = _handleUnauthorized;
+    return const AuthState();
+  }
+
+  /// Must stay synchronous: the auth interceptor fires it on an
+  /// unrecoverable 401 and does not await it.
+  void _handleUnauthorized() {
+    logger.warning('Session invalid, clearing local session');
+    state = const AuthState();
+    unawaited(SessionStorage.clear());
   }
 
   Future<void>  login(String email, String password) async {
@@ -41,12 +51,12 @@ class AuthController extends Notifier<AuthState> {
 
     state = state.copyWith(token: accessToken);
 
-    await loadUser();
-
     await SessionStorage.saveSession(
       accessToken: accessToken,
       refreshToken: refreshToken,
     );
+
+    await loadUser();
   }
 
   Future<void>  loadUser() async {
@@ -91,7 +101,7 @@ class AuthController extends Notifier<AuthState> {
     final refreshToken = await SessionStorage.getRefreshToken();
     final wasAuthenticated = state.isAuthenticated;
 
-    state = state.copyWith(user: null, token: null);
+    state = const AuthState();
     if (wasAuthenticated && refreshToken != null) {
       _repo.logout(refreshToken);
       await SessionStorage.clear();

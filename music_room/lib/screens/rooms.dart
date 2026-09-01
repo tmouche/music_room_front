@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
-import 'package:music_room/core/model/room.dart';
 import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
@@ -67,7 +66,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
     final appColor = Theme.of(context).colorScheme;
     final appText = Theme.of(context).textTheme;
 
-    final rooms = ref.watch(roomProvider.select((s) => s.availableRooms));
+    final rooms = ref.watch(roomProvider).availableRooms; 
 
     return Scaffold(
       backgroundColor: appColor.surface,
@@ -178,7 +177,7 @@ class _RoomsPageState extends ConsumerState<RoomsPage> {
                                 ).toList()
                               ),
                             )
-                          : AddRoomCard()
+                          : AddRoomCard(onTap: _createRoom,)
                       ],
                     ),                    
                   ],

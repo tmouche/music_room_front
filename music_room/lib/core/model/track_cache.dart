@@ -1,8 +1,8 @@
 import 'track.dart';
 
-final Map<String, Track> trackCache = {};
+final Map<int, Track> trackCache = {};
 
-Track getCachedTrack(String id) {
+Track getCachedTrack(int id) {
   return trackCache[id] ??
       Track(
         id: id,
