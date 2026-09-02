@@ -7,15 +7,15 @@ import 'package:music_room/app/theme/texting.dart';
 import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
-import 'package:music_room/data/music_taste.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/friend/provider.dart';
-import 'package:music_room/widgets/friend_card.dart';
+import 'package:music_room/screens/profile/widgets/friend_card.dart';
+import 'package:music_room/screens/profile/widgets/friends_settings_modal.dart';
 import 'package:music_room/widgets/music_room_logo.dart';
-import 'package:music_room/widgets/music_taste_modal.dart';
+import 'package:music_room/screens/profile/widgets/music_taste_modal.dart';
 import 'package:music_room/widgets/separator.dart';
-import 'package:music_room/widgets/style_card.dart';
-import 'package:music_room/widgets/user_logo.dart';
+import 'package:music_room/screens/profile/widgets/style_card.dart';
+import 'package:music_room/screens/profile/widgets/user_logo.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -43,8 +43,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => MusicTasteModal()
+    );
+  }
+
+  Future<void>  _onFriendsSettings() async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => FriendsSettingsModal()
     );
   }
 
@@ -256,7 +263,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             children: [
               Text("Friends", style: Texting.titleMedium,),
               IconButton(
-                onPressed: _onMusicTasteSettings,
+                onPressed: _onFriendsSettings,
                 icon: Icon(CupertinoIcons.slider_horizontal_3)
               )
             ],

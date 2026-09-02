@@ -5,10 +5,10 @@ import 'package:music_room/core/utils/regex.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/widgets/music_room_logo.dart';
-import '../app/theme/spacing.dart';
-import '../core/utils/exception.dart';
-import '../widgets/gradient_text.dart';
-import '../widgets/auth_parameters.dart';
+import '../../app/theme/spacing.dart';
+import '../../core/utils/exception.dart';
+import 'widgets/gradient_text.dart';
+import '../../widgets/auth_parameters.dart';
 
 class LogInPage extends ConsumerStatefulWidget {
   const LogInPage({super.key});

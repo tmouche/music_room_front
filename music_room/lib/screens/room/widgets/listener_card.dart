@@ -9,7 +9,7 @@ import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/room/provider.dart';
-import 'package:music_room/widgets/glass_pop_menu.dart';
+import 'package:music_room/screens/room/widgets/glass_pop_menu.dart';
 
 class ListenerCard extends ConsumerStatefulWidget {
   const ListenerCard({

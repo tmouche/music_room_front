@@ -7,7 +7,7 @@ import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/extention.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
-import 'package:music_room/widgets/music_list.dart';
+import 'package:music_room/screens/room/widgets/music_list.dart';
 import 'package:music_room/widgets/separator.dart';
 
 class SearchModal extends ConsumerStatefulWidget {

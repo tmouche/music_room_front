@@ -15,12 +15,12 @@ import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/room/provider.dart';
 import 'package:music_room/widgets/backgrounded_icons_button.dart';
-import 'package:music_room/widgets/glass_pop_menu.dart';
-import 'package:music_room/widgets/listener_card.dart';
-import 'package:music_room/widgets/music_list.dart';
-import 'package:music_room/widgets/search_modal.dart';
-import 'package:music_room/widgets/seek_bar.dart';
-import 'package:music_room/widgets/track_card.dart';
+import 'package:music_room/screens/room/widgets/glass_pop_menu.dart';
+import 'package:music_room/screens/room/widgets/listener_card.dart';
+import 'package:music_room/screens/room/widgets/music_list.dart';
+import 'package:music_room/screens/room/widgets/search_modal.dart';
+import 'package:music_room/screens/room/widgets/seek_bar.dart';
+import 'package:music_room/screens/room/widgets/track_card.dart';
 
 class RoomPage extends ConsumerStatefulWidget {
   final Room room;

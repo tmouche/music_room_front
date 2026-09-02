@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:flutter/cupertino.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:music_room/app/theme/coloring.dart';
@@ -8,7 +7,6 @@ import 'package:music_room/core/model/room.dart';
 import 'package:music_room/core/model/track.dart';
 import 'package:music_room/core/network/api_client.dart';
 import 'package:music_room/core/network/api_path.dart';
-import 'package:music_room/core/storage/settings_strorage.dart';
 import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';

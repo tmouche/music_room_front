@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:music_room/core/model/room.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/room/provider.dart';
-import 'package:music_room/screens/log_in.dart';
+import 'package:music_room/screens/log_in/log_in.dart';
 import 'package:music_room/screens/no_room.dart';
-import 'package:music_room/screens/profile.dart';
-import 'package:music_room/screens/room.dart';
-import 'package:music_room/screens/rooms.dart';
+import 'package:music_room/screens/profile/profile.dart';
+import 'package:music_room/screens/room/room.dart';
+import 'package:music_room/screens/rooms/rooms.dart';
 import 'package:music_room/widgets/scaffold_nav_bar.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {

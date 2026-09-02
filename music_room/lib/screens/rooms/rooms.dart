@@ -9,8 +9,8 @@ import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/room/provider.dart';
 import 'package:music_room/widgets/backgrounded_icons_button.dart';
-import 'package:music_room/widgets/create_room_modal.dart';
-import 'package:music_room/widgets/room_card.dart';
+import 'package:music_room/screens/rooms/widgets/create_room_modal.dart';
+import 'package:music_room/screens/rooms/widgets/room_card.dart';
 
 class RoomsPage extends ConsumerStatefulWidget {
   const RoomsPage({super.key});

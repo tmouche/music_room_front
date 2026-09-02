@@ -6,7 +6,7 @@ import 'package:music_room/app/theme/texting.dart';
 import 'package:music_room/data/music_taste.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/auth/state.dart';
-import 'package:music_room/widgets/style_card.dart';
+import 'package:music_room/screens/profile/widgets/style_card.dart';
 
 class MusicTasteModal extends ConsumerStatefulWidget {
   const MusicTasteModal({super.key});
@@ -73,7 +73,6 @@ class _MusicTasteModalState extends ConsumerState<MusicTasteModal> {
         ),
       );
   }
-
 
   @override
   Widget build(BuildContext context) {
