@@ -4,10 +4,11 @@ import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/regex.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/auth/provider.dart';
+import 'package:music_room/screens/log_in/widgets/auth_switch.dart';
 import 'package:music_room/widgets/music_room_logo.dart';
 import '../../app/theme/spacing.dart';
 import '../../core/utils/exception.dart';
-import 'widgets/gradient_text.dart';
+import '../../widgets/gradient_text.dart';
 import '../../widgets/auth_parameters.dart';
 
 class LogInPage extends ConsumerStatefulWidget {
@@ -326,81 +327,4 @@ class _LogInPageState extends ConsumerState<LogInPage> {
       ),
     );
   }
-}
-
-
-class AuthSwitch extends StatelessWidget {
-  const AuthSwitch({
-    super.key,
-    required this.knowUser,
-    required this.onLogin,
-    required this.onSignup,
-  });
-
-  final bool knowUser;
-  final VoidCallback onLogin;
-  final VoidCallback onSignup;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 50,
-      decoration: BoxDecoration(
-        color: Colors.grey.withAlpha(25),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _SwitchButton(
-              text: 'Log In',
-              selected: knowUser,
-              onPressed: onLogin,
-            ),
-          ),
-          Expanded(
-            child: _SwitchButton(
-              text: 'Sign Up',
-              selected: !knowUser,
-              onPressed: onSignup,
-            ),
-          )
-        ],
-      ),
-    );
-  }
-}
-
-class _SwitchButton extends StatelessWidget {
-  const _SwitchButton({
-    required this.text,
-    required this.selected,
-    required this.onPressed,
-  });
-
-  final String text;
-  final bool selected;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final appText = Theme.of(context).textTheme;
-
-    return Container(
-      height: 40,
-      margin: const EdgeInsets.all(Spacing.xs),
-      decoration: BoxDecoration(
-        color: selected
-          ? Colors.grey.withAlpha(50)
-          : Colors.transparent,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: TextButton(
-        onPressed: onPressed,
-        child: Text(text, style: appText.titleSmall),
-      ),
-    );
-  }
-
-
 }

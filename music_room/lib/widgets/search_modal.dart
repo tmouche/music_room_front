@@ -7,41 +7,50 @@ import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/extention.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
-import 'package:music_room/screens/room/widgets/music_list.dart';
-import 'package:music_room/widgets/separator.dart';
 
 class SearchModal extends ConsumerStatefulWidget {
   const SearchModal({
     super.key,
     required this.topic,
-    required this.sourceBuilder,
+    required this.contentBuilder,
   });
 
-  final String                                                  topic;
-  final Future<Widget>  Function(WidgetRef ref, String query)   sourceBuilder;
+  final String                           topic;
+  final Widget  Function(String query)   contentBuilder;
 
   @override
   ConsumerState<SearchModal> createState() => _SearchModalState();
 }
 
 class _SearchModalState extends ConsumerState<SearchModal> {
-
   bool    _isLoading = false;
   Widget  _searchedList = SizedBox();
+  String  _query = '';
 
   final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _resetContent();
+  }
+
+  void  _resetContent() {
+    if (mounted) setState(() => _searchedList = widget.contentBuilder(''));
+  }
 
   Future<void>  _onSearch() async {
     final String searchFor = _searchController.text;
     
     if (searchFor.trim().isEmpty) {
-      setState(() => _searchedList = SizedBox());
+      _resetContent();
       return ;
     }
+    setState(() => _query = searchFor);
 
     try {
       setState(() => _isLoading = true);
-      final myWidget = await widget.sourceBuilder(ref, searchFor);
+      final myWidget = widget.contentBuilder(_query);
       if (mounted) setState(() => _searchedList = myWidget);
     } on ApiException catch (e) {
       logger.debug('Api Error on searching tracks: $e');
@@ -139,23 +148,36 @@ class _SearchModalState extends ConsumerState<SearchModal> {
           spacing: Spacing.sm2,
           children: [
             Container(
-              width: 50,
-              height: 5,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                color: Coloring.onSurfaceVarient.withValues(alpha: 0.4)
+              padding: EdgeInsets.fromLTRB(
+                0, Spacing.sm, 0, Spacing.md,
               ),
+              decoration: BoxDecoration(
+                border: BoxBorder.fromLTRB(
+                  bottom: BorderSide(
+                    color: Coloring.onSurfaceVarientMuted,
+                    width: 1,
+                  )
+                )
+              ),
+              child: Column(
+                spacing: Spacing.sm,
+                children: [
+                  Container(
+                    width: 50,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(25),
+                      color: Coloring.onSurfaceVarient.withValues(alpha: 0.4)
+                    ),
+                  ),
+                  Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text(widget.topic.capitalizeFirst(), style: Texting.titleMedium),
+                  ),
+                  _buildSearchBar(),
+                ],
+              )
             ),
-            Container(
-              alignment: Alignment.centerLeft,
-              child: Text(widget.topic.capitalizeFirst(), style: Texting.titleMedium),
-            ),
-            _buildSearchBar(),
-            Container(
-              alignment: Alignment.centerLeft,
-              child: Text('YOUR ${widget.topic.toUpperCase()}', style: Texting.bodyMedium,),
-            ),
-            separator(),
             Expanded(child: _searchedList),
           ],
         ),

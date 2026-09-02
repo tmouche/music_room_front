@@ -41,7 +41,7 @@ class MockRoomRepository extends RoomRepository {
     final newRoom = Room(
       id: id,
       name: 'Fake Vibes $id',
-      owner: authState.user!.username,
+      owner: authState.user!.id,
       listeners: users
     );
     
@@ -52,13 +52,12 @@ class MockRoomRepository extends RoomRepository {
   @override
   Future<void> joinRoom(String roomId) async {
     final authState = _ref.read(authProvider);
-
     await Future.delayed(Duration(milliseconds: 1));
     for (int idx = 0; idx < allRooms.length; idx++) {
       final currentRoom = allRooms[idx];
       if (currentRoom.id == roomId) {
         final user = RoomUser(
-          id: "${int.parse(currentRoom.listeners.last.id) + 1}",
+          id: authState.user!.id,
           username: authState.user!.username
         );
         currentRoom.listeners.add(user);
@@ -123,49 +122,49 @@ class MockRoomRepository extends RoomRepository {
       "data": {
         "items": [
           {
-            'id': '1',
+            'id': 1,
             'title': 'fakeTitle1',
             'artist': 'fakeArtist1',
             'duration': 200
           },
           {
-            'id': '2',
+            'id': 2,
             'title': 'fakeTitle2',
             'artist': 'fakeArtist2',
             'duration': 200
           },
           {
-            'id': '3',
+            'id': 3,
             'title': 'fakeTitle3',
             'artist': 'fakeArtist3',
             'duration': 200
           },
           {
-            'id': '4',
+            'id': 4,
             'title': 'fakeTitle4',
             'artist': 'fakeArtist4',
             'duration': 200
           },
           {
-            'id': '5',
+            'id': 5,
             'title': 'fakeTitle5',
             'artist': 'fakeArtist5',
             'duration': 200
           },
           {
-            'id': '6',
+            'id': 6,
             'title': 'fakeTitle6',
             'artist': 'fakeArtist6',
             'duration': 200
           },
           {
-            'id': '7',
+            'id': 7,
             'title': 'fakeTitle7',
             'artist': 'fakeArtist7',
             'duration': 200
           },
           {
-            'id': '8',
+            'id': 8,
             'title': 'fakeTitle8',
             'artist': 'fakeArtist8',
             'duration': 200

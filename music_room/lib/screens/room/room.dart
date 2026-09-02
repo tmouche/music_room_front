@@ -17,8 +17,8 @@ import 'package:music_room/features/room/provider.dart';
 import 'package:music_room/widgets/backgrounded_icons_button.dart';
 import 'package:music_room/screens/room/widgets/glass_pop_menu.dart';
 import 'package:music_room/screens/room/widgets/listener_card.dart';
-import 'package:music_room/screens/room/widgets/music_list.dart';
-import 'package:music_room/screens/room/widgets/search_modal.dart';
+import 'package:music_room/screens/room/widgets/music_search.dart';
+import 'package:music_room/widgets/search_modal.dart';
 import 'package:music_room/screens/room/widgets/seek_bar.dart';
 import 'package:music_room/screens/room/widgets/track_card.dart';
 
@@ -177,7 +177,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
       backgroundColor: Colors.transparent,
       builder: (_) => SearchModal(
         topic: "Musics",
-        sourceBuilder: musicSearchView
+        contentBuilder: (query) => MusicSearch(query: query)
       )
     );
   }
@@ -189,7 +189,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
       backgroundColor: Colors.transparent,
       builder: (_) => SearchModal(
         topic: "Friends",
-        sourceBuilder: musicSearchView
+        contentBuilder: (query) => MusicSearch(query: query)
       )
     );
   }

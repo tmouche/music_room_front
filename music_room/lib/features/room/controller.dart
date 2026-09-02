@@ -126,7 +126,6 @@ class RoomController extends Notifier<RoomState> with WidgetsBindingObserver {
         final room = state.currentRoom?.copyWith(currentTrack: track);
         state = state.copyWith(currentRoom: room);
       });
-
       state = state.copyWith(isConnected: true);
     } catch (e) {
       logger.error('Failed to connect to WebSocket', error: e);

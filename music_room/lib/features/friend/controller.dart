@@ -22,6 +22,11 @@ class FriendController extends Notifier<FriendState> {
   late final AuthState        _auth;
   late final FriendRepository _repo;
 
+  Future<List<Friend>>  getFriends() async {
+    await refreshFriends();
+    return state.friends;
+  }
+
   Future<void>  refreshFriends() async {
     List<Friend>  friends = [];
     try {

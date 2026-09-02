@@ -11,23 +11,6 @@ import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/room/provider.dart';
 import 'package:music_room/screens/room/widgets/glass_pop_menu.dart';
 
-Future<Widget> musicSearchView(WidgetRef ref, String query) async {
-  List<Track> tracks = [];
-
-  final response = await ref.read(roomProvider.notifier).searchTrack(query);
-
-  if (
-    response.isNotEmpty
-    && response['data'] != null
-    && response['data']['items'] != null
-  ) {
-    final List<dynamic> itemsJson = response['data']['items'];
-    tracks = itemsJson.map((json) => Track.fromJson(json)).toList();
-  }
-
-  return MusicList(trackList: tracks);
-}
-
 class MusicSearchCard extends ConsumerStatefulWidget {
   final Track track;
   
@@ -161,27 +144,6 @@ class _MusicSearchCardState extends ConsumerState<MusicSearchCard> {
           )
         ),
       ]
-    );
-  }
-}
-
-class MusicList extends StatelessWidget {
-  const MusicList({
-    super.key,
-    required this.trackList,
-  });
-
-  final List<Track> trackList;
-
-  @override
-  Widget build(BuildContext context) {
-    return  SingleChildScrollView(
-        child: Column(
-          spacing: Spacing.md,
-          children: trackList.map(
-            (toElement) => MusicSearchCard(track: toElement)
-          ).toList(),
-        ),
     );
   }
 }

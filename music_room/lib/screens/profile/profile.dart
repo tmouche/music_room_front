@@ -9,10 +9,13 @@ import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/friend/provider.dart';
+import 'package:music_room/screens/profile/widgets/confirm_email_card.dart';
 import 'package:music_room/screens/profile/widgets/friend_card.dart';
-import 'package:music_room/screens/profile/widgets/friends_settings_modal.dart';
+import 'package:music_room/screens/profile/widgets/friend_search.dart';
+import 'package:music_room/screens/profile/widgets/subscription_card.dart';
 import 'package:music_room/widgets/music_room_logo.dart';
 import 'package:music_room/screens/profile/widgets/music_taste_modal.dart';
+import 'package:music_room/widgets/search_modal.dart';
 import 'package:music_room/widgets/separator.dart';
 import 'package:music_room/screens/profile/widgets/style_card.dart';
 import 'package:music_room/screens/profile/widgets/user_logo.dart';
@@ -27,14 +30,6 @@ class ProfilePage extends ConsumerStatefulWidget {
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _isLoading = false;
 
-  Future<void>  _onResendEmail() async {
-    return ;
-  }
-
-  Future<void>  _onSubscribe() async {
-    return ;
-  }
-
   Future<void>  _onSettings() async {
     return ;
   }
@@ -47,11 +42,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  Future<void>  _onFriendsSettings() async {
+  void  _onFriendsSettings() async {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => FriendsSettingsModal()
+      builder: (_) => SearchModal(
+        topic: "Friends",
+        contentBuilder: (query) => FriendSearch(query: query)
+      )
     );
   }
 
@@ -83,76 +81,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  Widget  __buildSubCard() {
-    return Container(
-      padding: EdgeInsets.all(Spacing.md),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Coloring.primary.withValues(alpha: 0.05),
-      ),
-      child: Row(
-        spacing: Spacing.sm2,
-        children: [
-          Icon(Icons.diamond, size: 30, color: Coloring.tertiary,),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Premium Subsciption", style: Texting.titleMiddle.copyWith(color: Coloring.tertiary)),
-                Text("Subscribe to the premium version to private room", style: Texting.bodyMedium),
-                TextButton(
-                  onPressed: _onSubscribe,
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: Text(
-                    "Subscribe",
-                    style: Texting.titleMiddle.copyWith(color: Coloring.tertiary)
-                  ),
-                )
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget  __buildConfirmEmail() {
-    final authState = ref.read(authProvider);
-    return Container(
-      padding: EdgeInsets.all(Spacing.md),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Coloring.primary.withValues(alpha: 0.05),
-      ),
-      child: Row(
-        spacing: Spacing.sm2,
-        children: [
-          Icon(CupertinoIcons.mail, size: 30, color: Coloring.tertiary,),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Verify your email", style: Texting.titleMiddle.copyWith(color: Coloring.tertiary)),
-                Text("Confirm ${authState.user!.email} to unlock rooms", style: Texting.bodyMedium),
-                TextButton(
-                  onPressed: _onResendEmail,
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: Text(
-                    "Resend",
-                    style: Texting.titleMiddle.copyWith(color: Coloring.tertiary)
-                  ),
-                )
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
 
   Widget  _buildNameBox() {
     final authState = ref.read(authProvider);
@@ -197,7 +125,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               )
             ],
           ),
-          if (!authState.user!.isEmailConfirmed) __buildConfirmEmail() else if (!authState.user!.premiumUser) __buildSubCard()
+          if (!authState.user!.isEmailConfirmed) ConfirmEmailCard() else if (!authState.user!.premiumUser) SubscriptionCard()
         ],
       ) 
     );
