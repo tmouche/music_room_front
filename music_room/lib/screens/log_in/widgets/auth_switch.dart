@@ -5,13 +5,11 @@ class AuthSwitch extends StatelessWidget {
   const AuthSwitch({
     super.key,
     required this.knowUser,
-    required this.onLogin,
-    required this.onSignup,
+    required this.onTap,
   });
 
   final bool knowUser;
-  final VoidCallback onLogin;
-  final VoidCallback onSignup;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -27,14 +25,14 @@ class AuthSwitch extends StatelessWidget {
             child: _SwitchButton(
               text: 'Log In',
               selected: knowUser,
-              onPressed: onLogin,
+              onPressed: onTap,
             ),
           ),
           Expanded(
             child: _SwitchButton(
               text: 'Sign Up',
               selected: !knowUser,
-              onPressed: onSignup,
+              onPressed: onTap,
             ),
           )
         ],

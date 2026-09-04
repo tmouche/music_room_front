@@ -154,7 +154,7 @@ class AuthController extends Notifier<AuthState> {
     unawaited(_repo.confirmEmail());
   }
 
-  void  forgotPassword(String email) async {
+  Future<void>  forgotPassword(String email) async {
     await _repo.forgotPassword(email);
   }
 }
