@@ -18,13 +18,13 @@ class Texting {
   );
 
   static final titleMiddle = GoogleFonts.spaceGrotesk(
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: FontWeight.bold,
     color: Coloring.onSurface,
   );
 
   static final titleSmall = GoogleFonts.spaceGrotesk(
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: FontWeight.bold,
     color: Coloring.onSurface,
   );
@@ -35,27 +35,27 @@ class Texting {
   );
 
   static final bodyMedium = GoogleFonts.spaceGrotesk(
-    fontSize: 13,
+    fontSize: 14,
     color: Coloring.onSurfaceVarient,
   );
 
   static final bodyMediumAccent = GoogleFonts.spaceGrotesk(
-    fontSize: 13,
+    fontSize: 14,
     color: Coloring.onSurface,
   );
 
   static final bodyMiddle = GoogleFonts.spaceGrotesk(
-    fontSize: 11,
+    fontSize: 12,
     color: Coloring.onSurfaceVarient,
   );
 
   static final bodyMiddleTrans = GoogleFonts.spaceGrotesk(
-    fontSize: 11,
+    fontSize: 12,
     color: Coloring.onSurface.withValues(alpha: 0.6),
   );
 
   static final bodyMiddleAccent = GoogleFonts.spaceGrotesk(
-    fontSize: 11,
+    fontSize: 12,
     color: Coloring.onSurface,
   );
 

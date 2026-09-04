@@ -1,13 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
 import 'package:music_room/core/model/room_user.dart';
+import 'package:music_room/core/model/user.dart';
 import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
+import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/room/provider.dart';
 import 'package:music_room/screens/room/widgets/glass_pop_menu.dart';
 
@@ -28,6 +31,7 @@ class ListenerCard extends ConsumerStatefulWidget {
 }
 
 class _ListenerCardState extends ConsumerState<ListenerCard> {
+  bool  _isLoading = false;
 
   Future<void>  _onGiveOwnership() async {
     try {
@@ -38,6 +42,26 @@ class _ListenerCardState extends ConsumerState<ListenerCard> {
     } catch (e) {
       logger.debug('Error on give ownership: $e');
       if (mounted) UiUtils.showError(context, 'Internal Server Error.');
+    }
+  }
+
+  Future<void> _onProfile() async {
+    setState(() => _isLoading = true);
+    User? user;
+    try {
+      user = await ref.read(authProvider.notifier).getUser(widget._listener.id);
+      print('${user.favoriteGenres}');
+    } on ApiException catch (e) {
+      logger.debug('API Error on get profile: $e');
+      if (mounted) UiUtils.showError(context, 'Get User, Server Error.');
+    } catch (e) {
+      logger.debug('Error on get profile: $e');
+      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+    if (mounted && user != null) {
+      context.pushReplacement('/users/${user.id}', extra: user);
     }
   }
 
@@ -70,6 +94,7 @@ class _ListenerCardState extends ConsumerState<ListenerCard> {
                 else if (widget._amIOwner) GlassPopMenu(
                   items: [
                     GlassPopMenuItem(icon: CupertinoIcons.sparkles, label: 'Give Ownership', onTap: _onGiveOwnership),
+                    GlassPopMenuItem(icon: CupertinoIcons.person, label: 'Profile', onTap: _onProfile),
                   ],
                 ),
               ],

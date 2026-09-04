@@ -8,6 +8,16 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+class ServerException implements Exception {
+  ServerException();
+
+  static const String message = 'Internal Server Error';
+  static const int statusCode = 500;
+
+  @override
+  String toString() => message;
+}
+
 class StreamException implements Exception {
   const StreamException(this.message);
 

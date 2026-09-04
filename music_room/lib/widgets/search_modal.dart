@@ -16,7 +16,7 @@ class SearchModal extends ConsumerStatefulWidget {
   });
 
   final String                           topic;
-  final Widget  Function(String query)   contentBuilder;
+  final Widget  Function(String query)  contentBuilder;
 
   @override
   ConsumerState<SearchModal> createState() => _SearchModalState();

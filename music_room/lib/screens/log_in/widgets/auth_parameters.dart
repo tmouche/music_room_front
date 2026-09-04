@@ -1,10 +1,21 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/app/theme/coloring.dart';
+import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
-import '../app/theme/spacing.dart';
 
+// class AuthParameters extends ConsumerStatefulWidget {
+//   const AuthParameters({super.key});
+
+//   @override
+//   ConsumerState<AuthParameters> createState() => _AuthParametersState();
+// }
+
+// class _AuthParametersState extends ConsumerState<AuthParameters> {
+  
+// }
 
 class AuthParameters extends StatelessWidget {
   const AuthParameters({

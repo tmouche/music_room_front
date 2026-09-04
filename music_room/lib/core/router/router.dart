@@ -3,10 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_room/core/model/room.dart';
+import 'package:music_room/core/model/user.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/room/provider.dart';
 import 'package:music_room/screens/log_in/log_in.dart';
 import 'package:music_room/screens/no_room.dart';
+import 'package:music_room/screens/profile/other_profile.dart';
 import 'package:music_room/screens/profile/profile.dart';
 import 'package:music_room/screens/room/room.dart';
 import 'package:music_room/screens/rooms/rooms.dart';
@@ -28,6 +30,16 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LogInPage()),
+      GoRoute(
+        path: '/users',
+        builder: (_, __) => const ProfilePage(),
+        routes: [
+          GoRoute(
+              path: ':id',
+              builder: (_, state) => OtherProfile(user: state.extra as User)
+            ),
+        ]
+      ),
 
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => ScaffoldWithNavBar(

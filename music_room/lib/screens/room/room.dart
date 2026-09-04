@@ -14,6 +14,7 @@ import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/room/provider.dart';
+import 'package:music_room/screens/profile/widgets/friend_search.dart';
 import 'package:music_room/widgets/backgrounded_icons_button.dart';
 import 'package:music_room/screens/room/widgets/glass_pop_menu.dart';
 import 'package:music_room/screens/room/widgets/listener_card.dart';
@@ -189,7 +190,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
       backgroundColor: Colors.transparent,
       builder: (_) => SearchModal(
         topic: "Friends",
-        contentBuilder: (query) => MusicSearch(query: query)
+        contentBuilder: (query) => FriendSearch(query: query)
       )
     );
   }
@@ -468,7 +469,7 @@ class _RoomPageState extends ConsumerState<RoomPage>
               children: _room.listeners.map(
                 (toElement) => ListenerCard(
                   listener: toElement,
-                  isOwner: toElement.username == _room.owner,
+                  isOwner: toElement.id == _room.owner,
                   amIOwner: _isOwner,
                 )
               ).toList(),

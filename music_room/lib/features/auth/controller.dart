@@ -72,6 +72,11 @@ class AuthController extends Notifier<AuthState> {
     state = state.copyWith(user: user, isLoading: false);
   }
 
+  Future<User>  getUser(String userId) async {
+    final response = await _repo.getUser(userId);
+    return _buildUser(response);
+  }
+
   User _buildUser(Map<String, dynamic> data) {
     return User(
       id: data['id'],
@@ -149,7 +154,7 @@ class AuthController extends Notifier<AuthState> {
     unawaited(_repo.confirmEmail());
   }
 
-  void  forgotPassword() async {
-    unawaited(_repo.forgotPassword(state.user!.email!));
+  void  forgotPassword(String email) async {
+    await _repo.forgotPassword(email);
   }
 }

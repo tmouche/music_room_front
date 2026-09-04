@@ -1,4 +1,5 @@
 import 'package:music_room/core/network/api_client.dart';
+import 'package:music_room/core/network/api_path.dart';
 import 'package:music_room/core/utils/constant.dart' as constant;
 import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
@@ -9,20 +10,20 @@ class AuthRepository {
   AuthRepository();
 
   Future<Map<String, dynamic>> login(String email, String password) async {
-    try {
-      final data = await ApiClient.post(
-        constant.AUTH_LOGIN_ROUTE,
-        body: {'email': email, 'password': password},
-      );
-      if (data == null) {
-        logger.error('Authentication response is missing.');
-        throw ApiException('No response data');
-      }
-      return data as Map<String, dynamic>;
-    } catch (e) {
-      logger.error('Login failed', error: e);
-      throw ApiException('Authentification Operation failed');
+    final data = await ApiClient.post(
+      constant.AUTH_LOGIN_ROUTE,
+      body: {'email': email, 'password': password},
+    );
+    if (data == null) {
+      logger.error('Authentication response is missing.');
+      throw ServerException();
     }
+    return data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>>  getUser(String userId) async {
+    final data = await ApiClient.get(ApiPath.usersGet(userId));
+    return data;
   }
 
   Future<Map<String, dynamic>>  fetchUser() async {
@@ -97,21 +98,15 @@ class AuthRepository {
   }
 
   Future<Map<String, dynamic>> signin(String username, String email, String password) async {
-    try {
       final data = await ApiClient.post(
         constant.AUTH_REGISTER,
         body: {'username': username, 'email': email, 'password': password},
       );
       if (data == null) {
         logger.error('Register response is missing');
-        throw ApiException('No response data');
+        throw ServerException();
       }
       return data as Map<String, dynamic>;
-    } catch (e) {
-      // ATTENTION AUX COLLISIONS
-      logger.error('Registration failed', error: e);
-      throw ApiException('Registration Operation failed');
-    }
   }
 
   Future<void> updateUsername(String newUsername) async {
@@ -123,6 +118,7 @@ class AuthRepository {
     } catch (e) {
       // ICI il pourrait avoir un pb de collision il faut donc voir si le back
       // retourne une erreur differente et lancer des Exceptions en concéquence
+      print(e);
       logger.error('Failed to update user Username', error: e);
       throw ApiException('Update Username Operation failed');
     }
@@ -191,8 +187,9 @@ class AuthRepository {
     try {
       await ApiClient.post(constant.AUTH_FORGOT_PASSWORD_ROUTE, body: {'email': email});
     } catch (e) {
-      logger.error('Failed to start reseting password');
-      throw ApiException('Forgot Password Operation failed');
+      logger.error('Failed to reseting password');
+      logger.debug('Details: $e');
+      throw ApiException(e.toString());
     }
   }
 }

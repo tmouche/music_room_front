@@ -1,10 +1,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
 import 'package:music_room/core/model/friend.dart';
 import 'package:music_room/features/friend/provider.dart';
+import 'package:music_room/screens/profile/widgets/friend_search_card.dart';
+import 'package:music_room/widgets/drop_down_list.dart';
 import 'package:music_room/widgets/separator.dart';
 
 
@@ -47,10 +48,10 @@ class _FriendSearchState extends ConsumerState<FriendSearch> {
     }
 
     setState(() => _friends = friends.acceptedFriends.where(
-      (f) => f.username != null ? f.username!.contains(widget.query) : false).toList()
+      (f) => f.username != null && f.username!.contains(widget.query)).toList()
     );
-    setState(() => _friends = friends.pendingRequests.where(
-      (f) => f.username != null ? f.username!.contains(widget.query) : false).toList()
+    setState(() => _pendingFriends = friends.pendingRequests.where(
+      (f) => f.username != null && f.username!.contains(widget.query)).toList()
     );
   }
 
@@ -60,43 +61,32 @@ class _FriendSearchState extends ConsumerState<FriendSearch> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          Container(
-            alignment: Alignment.centerLeft,
-            child: Text('YOUR INVITATION', style: Texting.bodyMedium,),
+          DropDownList(
+            title: Column(
+              children: [
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text('YOUR INVITATIONS', style: Texting.bodyMedium,),
+                ),
+                separator(),
+              ],
+            ),
+            children: _pendingFriends.map((f) => FriendSearchCard(friend: f, isPending: true,)).toList()
           ),
-          separator(),
-          Column(
-            spacing: Spacing.sm,
-            children: _friends.map(
-              (toElement) => FriendSearchCard(friend: toElement)
-            ).toList(),
+          DropDownList(
+            title: Column(
+              children: [
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text('YOUR FRIENDS', style: Texting.bodyMedium,),
+                ),
+                separator(),
+              ],
+            ),
+            children: _friends.map((f) => FriendSearchCard(friend: f)).toList()
           ),
         ],
-      )
-    );
-  }
-}
-
-class FriendSearchCard extends ConsumerStatefulWidget {
-  const FriendSearchCard({
-    super.key,
-    required this._friend,
-  });
-
-  final Friend _friend;
-
-  @override
-  ConsumerState<FriendSearchCard> createState() => _FriendSearchCardState();
-}
-
-class _FriendSearchCardState extends ConsumerState<FriendSearchCard> {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text('Hello'),
-        Text('Hi')
-      ],
+      ),
     );
   }
 }

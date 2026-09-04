@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:music_room/app/theme/spacing.dart';
+import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/regex.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/screens/log_in/widgets/auth_switch.dart';
-import 'package:music_room/widgets/music_room_logo.dart';
-import '../../app/theme/spacing.dart';
-import '../../core/utils/exception.dart';
-import '../../widgets/gradient_text.dart';
-import '../../widgets/auth_parameters.dart';
+import 'package:music_room/screens/log_in/widgets/logo_global.dart';
+import 'widgets/auth_parameters.dart';
 
 class LogInPage extends ConsumerStatefulWidget {
   const LogInPage({super.key});
@@ -45,29 +44,38 @@ class _LogInPageState extends ConsumerState<LogInPage> {
     });
   }
 
-  Future<void>  _resetPasswordHandler() async {
-    final String email = _emailController.text.trim();
-
-    if (email.isEmpty || !isValidEmail(email)) {
-      _emailShakeKey.currentState?.shake();
-      return ;
+  void __emailFormatUtils() {
+    if (mounted) {
+      UiUtils.showHintBanner(
+        context, 
+        'Invalid Email',
+        description: 'The Email format is wrong try something like xxxxxxxx@xxxx.xxx'
+      );
     }
+  }
 
-    if (_askedReset) {
-      return ;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      ref.read(authProvider.notifier).forgotPassword();
-      if (mounted) setState(() => _askedReset = true);
-    } on ApiException catch (e) {
-      logger.debug('API Error on reset password: $e');
-      if (mounted) UiUtils.showError(context, 'Reset Password Failed, Server Error.');
-    } catch (e) {
-      logger.debug('Error on reset password: $e');
+  void  _onServerErrorUtils(String message) {
+      logger.debug(message);
       if (mounted) UiUtils.showError(context, 'Internal Server Error.');
+  }
+
+  Future<void>  _resetPasswordHandler() async {
+    if (_askedReset) return;
+    final String email = _emailController.text.trim();
+    if (email.isEmpty) {
+      if (mounted) {_emailShakeKey.currentState?.shake();}
+      return ;
+    }
+    if (!isValidEmail(email)) {
+      __emailFormatUtils();
+      return ;
+    }
+    setState(() => _isLoading = true);
+    try {
+      ref.read(authProvider.notifier).forgotPassword(email);
+      if (mounted) setState(() => _askedReset = true);
+    } catch (exc) {
+      _onServerErrorUtils('Error LogIn screen reset password: $exc');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -76,7 +84,6 @@ class _LogInPageState extends ConsumerState<LogInPage> {
   Future<void> _onLogIn() async {
     final String email = _emailController.text.trim();
     final String password = _passwordController.text.trim();
-
     if (email.isEmpty || !isValidEmail(email)) {
       _emailShakeKey.currentState?.shake();
       return ;
@@ -85,16 +92,23 @@ class _LogInPageState extends ConsumerState<LogInPage> {
       _passwordShakeKey.currentState?.shake();
       return ;
     }
-
+    if (!isValidEmail(email)) {
+      __emailFormatUtils();
+      return ;
+    }
     setState(() => _isLoading = true);
-
     try {
       await ref.read(authProvider.notifier).login(email, password);
     } on ApiException catch (e) {
-      logger.debug('API Error on login password: $e');
-      if (mounted) _passwordShakeKey.currentState?.shake();
+      logger.debug('API Error on log in: $e');
+        if (mounted) {
+          UiUtils.showHintBanner(
+          context, 
+          e.message,
+        );
+      }
     } catch (e) {
-      logger.debug('Error on login password: $e');
+      logger.debug('Error on log in: $e');
       if (mounted) UiUtils.showError(context, 'Internal Server Error.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -105,8 +119,7 @@ class _LogInPageState extends ConsumerState<LogInPage> {
     final String email = _emailController.text.trim();
     final String password = _passwordController.text.trim();
     final String username = _usernameController.text.trim();
-
-    if (email.isEmpty || !isValidEmail(email)) {
+    if (email.isEmpty) {
       _emailShakeKey.currentState?.shake();
       return ;
     }
@@ -118,15 +131,18 @@ class _LogInPageState extends ConsumerState<LogInPage> {
       _usernameShakeKey.currentState?.shake();
       return ;
     }
-
+    if (!isValidEmail(email)) {
+      __emailFormatUtils();
+      return ;
+    }
     setState(() => _isLoading = true);
-
     try {
       await ref.read(authProvider.notifier).signin(username, email, password);
     } on ApiException catch (e) {
       if (mounted) UiUtils.showError(context, e.message);
     } catch (e) {
-      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
+
+      _onServerErrorUtils('Error on sign in: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -174,29 +190,7 @@ class _LogInPageState extends ConsumerState<LogInPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                MusicRoomLogo(size: 86),
-                const SizedBox(height: Spacing.sm),
-                GradientText(
-                  'Music Room',
-                  style: const TextStyle(fontSize: 38, fontWeight: FontWeight.bold),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      appColor.primary,
-                      appColor.secondary,
-                      appColor.tertiary,
-                    ]
-                  )
-                ),
-                Text(
-                  'Listen Together, Anytime',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: appColor.onSurfaceVariant,
-                    fontSize: 18,
-                  ),
-                ),
+                LogoGlobal(),
                 const SizedBox(height: Spacing.xl),
                 Container(
                   constraints: BoxConstraints(maxWidth: 300),
@@ -251,7 +245,7 @@ class _LogInPageState extends ConsumerState<LogInPage> {
                           style: TextButton.styleFrom(
                             padding: EdgeInsets.zero,
                           ),
-                          onPressed: _isLoading ? null : _resetPasswordHandler, 
+                          onPressed: _isLoading || _askedReset ? null : _resetPasswordHandler, 
                           child: !_askedReset
                             ? Text(
                                 'Forgot Password?',

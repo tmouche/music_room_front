@@ -10,8 +10,6 @@ import '../utils/logger.dart';
 import '../utils/exception.dart';
 import '../storage/session_storage.dart';
 
-final _log = AppLogger();
-
 class ApiClient {
   static const String baseUrl = String.fromEnvironment(
     'BACKEND_URL',
@@ -43,15 +41,18 @@ class ApiClient {
       final response = await request();
       return response.data;
     } on DioException catch (e) {
-      _log.error(
+      logger.error(
         'API Error: ${e.requestOptions.method} ${e.requestOptions.path}',
         error: e,
         stackTrace: StackTrace.current,
       );
+      if (e.response != null && e.response!.statusCode == 500) {
+        throw ServerException();
+      }
       throw ApiException(_parseErrorResponse(e), e.response?.statusCode);
     } catch (e, st) {
-      _log.error('Unexpected error', error: e, stackTrace: st);
-      throw ApiException('An unexpected error occurred');
+      logger.error('Unexpected error', error: e, stackTrace: st);
+      throw ServerException();
     }
   }
 
@@ -125,7 +126,7 @@ class _AuthInterceptor extends QueuedInterceptorsWrapper {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    _log.debug('${options.method} ${options.path}');
+    logger.debug('${options.method} ${options.path}');
     final token = await ApiClient.getToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
@@ -155,9 +156,9 @@ class _AuthInterceptor extends QueuedInterceptorsWrapper {
             refreshToken: newRefreshToken,
           );
 
-          _log.debug('Token refreshed successfully');
+          logger.debug('Token refreshed successfully');
         } catch (e) {
-          _log.error('Token refresh failed', error: e);
+          logger.error('Token refresh failed', error: e);
           ApiClient.onUnauthorized?.call();
           return handler.reject(err);
         }
@@ -165,10 +166,6 @@ class _AuthInterceptor extends QueuedInterceptorsWrapper {
         err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
 
         try {
-          // The retry must NOT go through ApiClient._dio: this queued
-          // interceptor serializes error handling, so an error on the retried
-          // request would wait behind this very handler — deadlocking every
-          // subsequent request. _refreshDio has no interceptor.
           final retryResponse = await _refreshDio.fetch(err.requestOptions);
           return handler.resolve(retryResponse);
         } on DioException catch (retryErr) {
@@ -177,7 +174,7 @@ class _AuthInterceptor extends QueuedInterceptorsWrapper {
           return handler.reject(err);
         }
       } else {
-        _log.warning('No refresh token available');
+        logger.warning('No refresh token available');
         ApiClient.onUnauthorized?.call();
         return handler.reject(err);
       }

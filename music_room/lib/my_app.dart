@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/core/router/router.dart';
+import 'package:music_room/widgets/min_width_scroll.dart';
 
 class MusicRoomApp extends ConsumerWidget {
   const MusicRoomApp({super.key});
@@ -11,6 +12,7 @@ class MusicRoomApp extends ConsumerWidget {
     return MaterialApp.router(
       routerConfig: router,
       title: 'MusicRoom',
+      builder: (context, child) => MinWidthScroll(child: child!),
       theme: ThemeData(
         colorScheme: ColorScheme(
           brightness: Brightness.dark,

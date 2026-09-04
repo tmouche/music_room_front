@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 class Coloring {
   const Coloring();
@@ -16,6 +17,9 @@ class Coloring {
 
   static final borderPrimary = Colors.grey;
   static final borderFocused = Colors.red.withAlpha(150);
+
+  static const onError = Colors.red;
+  static const onSuccess = Colors.green;
 
   static final List<List<Color>> cardColors = [
     [Color(0xFFEC4899), Color(0xFFEF4444), Color(0xFFF97316)], // pink → red → orange

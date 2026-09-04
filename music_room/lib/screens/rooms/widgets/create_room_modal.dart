@@ -8,7 +8,7 @@ import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/core/utils/ui_utils.dart';
 import 'package:music_room/features/room/provider.dart';
-import 'package:music_room/widgets/auth_parameters.dart';
+import 'package:music_room/screens/log_in/widgets/auth_parameters.dart';
 
 class CreateRoomModal extends ConsumerStatefulWidget {
   const CreateRoomModal({super.key});
