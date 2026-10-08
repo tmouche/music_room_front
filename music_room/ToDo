@@ -31,3 +31,184 @@ Il faut encore faire les notifications
 Il faut encore faire les profiles
 
 Bug sur le MyRoom y a un truc bizarre avec le pop il se croit pas au bon endroit
+
+
+
+
+
+
+
+
+Comment ça fonctionne
+
+Il y a trois pièces, chacune ne connaît que sa voisine.
+
+1. notificationProvider est un état global : "le message à afficher en ce moment", ou rien. C'est une donnée pure, sans couleur ni widget.
+2. NotificationHost est le seul widget qui lit cet état. Il vit dans le shell, au-dessus du Navigator et du scroll, et il dessine le bandeau. Quand le bandeau a fini de disparaître, il remet l'état à vide.
+3. BusyNotifier est un verrou par écran. run exécute une action réseau, bloque les appels concurrents, attrape les erreurs et les traduit en notification.
+
+Voici ce qui se passe quand l'utilisateur clique sur "Log In" avec un mauvais mot de passe :
+
+ConnectionButton._onLogIn
+  └─ _validate()                        champs vides ? shake, stop
+  └─ loginBusy.run(() => auth.login())  sta
+       └─ AuthController.login
+            └─ AuthRepository.login     le
+                 └─ throw ApiException('Wrong password')
+       ├─ catch ApiException            not'Wrong password')
+       └─ finally                        state = false, boutons réactivés
+NotificationHost                        voibandeau
+  └─ 5 s plus tard                       notificationProvider.dismiss(id)
+
+Le widget n'a rien attrapé, rien loggé, rien affiché. Il a validé, lancé, et c'est tout.
+
+Comment l'utiliser sur un écran
+
+Un provider busy par écran, à côté de l'écran, en autoDispose pour qu'il retombe à false quand on quitte :
+
+// lib/screens/room/provider.dart
+final roomBusyProvider =
+    NotifierProvider.autoDispose<BusyNotifier, bool>(BusyNotifier.new);
+
+Dans n'importe quel widget de cet écran, parent ou enfant, deux lignes suffisent :
+
+final busy = ref.watch(roomBusyProvider);
+
+IconButton(
+  onPressed: busy ? null : () => ref.read(r(
+    () => ref.read(roomProvider.notifier).skipNextTrack(),
+    label: 'Skip track',
+  ),
+)
+
+label sert au log et au texte de secours "Sagain." quand l'erreur n'est pas uneApiException.
+
+Quand l'erreur serveur est une information plutôt qu'une panne, comme un mauvais mot de passe ou un email déjà pris,
+passe apiErrorKind: NotificationKind.hint. he en orange au lieu de rouge.
+
+Quand il faut faire quelque chose après le nvoyé :
+
+final ok = await busy.run(() => room.privatroom');
+if (ok) ref.read(notificationProvider.notifier).success('Room is now private');
+
+C'est ce que fait le "Check Your Email!" du reset de mot de passe. Pas de mounted à vérifier pour la notification,
+elle ne dépend pas d'un widget.
+
+Pour un message sans appel réseau, comme unppelle le provider directement :
+
+ref.read(notificationProvider.notifier).hinn: '...');
+
+Comment construire l'architecture autour
+
+Le principe est que chaque couche a un seul
+
+- Le repository lance. C'est lui qui connaîde HTTP ou un DioException en ApiExceptionavec le message serveur, ou en ServerException. Il ne loggue pas et n'affiche rien. Aujourd'hui impl_repository.dart a encore des try/caturs et un print. Ils peuvent partir : laisser remonter suffit.                                                                                              - Le controller ne touche pas aux erreurs. le repository, met à jour son état, et laisse passer ce qui échoue. S'il attrape, run ne voit rien et l'utilisateur non plus.                               - BusyNotifier.run est le seul catch. Si unxception pour le mode hors ligne, tu ajoutesune clause dans run et tous les écrans en profitent.                                                          - Le widget valide et lance. Il décide seulsie : champ vide, format d'email, mot depasse trop court. Le shake est sa réponse à ces cas-là. Dès que ça part vers le réseau, il délègue.           
+Le découpage des providers busy suit les zones d'interface qu'un appel doit bloquer. Un écran, un provider. Une modale qui doit rester indépendante de l'écche de musique, a le sien. Ce qui a un_isLoading local aujourd'hui doit soit rejoindre le provider de son écran, soit en obtenir un dédié. Le bon test : "si cet appel est en cours, quels boutons dnse dessine le périmètre du provider.
+
+Le sens des données est toujours le même. Lles actions montent par ref.read(...).run. Un enfant ne reçoit plus ni isLoading ni callback d'erreur de son parent. Ça te libère pour découper room.dart : chaque
+morceau devient un ConsumerWidget autonome usyProvider.
+
+Ce qui doit disparaître à terme : les UiUtiqui ne sont qu'une passerelle vers leprovider, et showSnackBar. Chaque fois que tu migres un écran vers run, ses appels UiUtils tombent d'eux-mêmes. Quand
+il n'en reste plus, UiUtils peut être suppr
+
+Les pièges à connaître :
+
+- Toujours await le run. Sans lui, le Futurception non attrapée par run finirait enconsole. run attrape tout, donc le risque est réduit, mais le await reste nécessaire pour utiliser le bool.
+- Un provider autoDispose que plus personnecun widget ne faitref.watch(xxxBusyProvider), le flag ne survit pas à la fin de run. En pratique le bouton qui déclenche l'actiol'observe toujours, donc ça ne se produit
+- Deux écrans qui partageraient un provider busy se bloqueraient mutuellement. C'est pour ça qu'il n'y a pas de provider busy global.
+
+Pour tester un écran, tu n'as plus besoin diderContainer avec un authRepositoryProvidersurchargé pour lancer une ApiException, un appel à run, et tu vérifies notificationProvider. Les deux fichiers dans test/ montrent le modèle.
+
+
+
+
+Crach on LogOut FRONT. CHECK 
+Crach on LogOut SERVER 401.
+La User list ne se met pas à jour. CHECK
+Je dois parfois rejoin ma propre room, surement un probleme avec la detection de savoir qui est qui ou plus simplement qui est co au websock ou pas,
+  je pense que ca vient plutot du back à voir, parce que je ne crois pas etre encore co au websocket CHECK c etait un probleme de connection/deco au websocket de base
+Quand on update les tastes ca ramene sur la main page. CHECK
+Le LogOut ne deconnect pas du websocket donc il faut faire attention! CHECK -> Au logout avant de call la route une demande de deconnection est faite EXPLICITEMENT.
+
+Si la room est close et qu on retourne sur la page ListenNow avec la room qui etait ouverte ca affiche un peu une room inexistante et ca nous met dans une situation indefinie. Et on ne peut plus rejoindre de room ensuite
+  - pas de call api visible donc c est un probleme dans le front
+  CHECK Le probleme venait du close de ws qui etant deja close tournais dans le vide indefiniment, on est toujours sur la page mais on ne peut plus rien faire.
+
+Si connection au websocket fail il ne faut pas join la room ! Sinon ca crée des zombie qui traine! CHECK
+
+Pour regler une bonne partie des probleme petit changement de design, lorsqu on clique sur ListenNow on est forcement sur /rooms et
+  le fait de rejoindre une room envoi sur MyRoom 
+
+
+Il semble avoir un leger bug, si l access token est dead = pas de connection au websocket. -> La route room permet en partie d eviter ca, maintenant je vais voir si je peux pas mettre un refresh dans le cas d une app qui n a pas été ouverte depuis longtemps
+  Mauvaise idée, il y a eu plein de call dans tous les sens avant donc c est pas ca le probleme vient surement d ailleurs ou est lié au back directement
+
+
+Y a une situation anormale dans son ensemble provenant du back et du front. Lorsque ca fait longtemps qu'il n y a pas eu d actions sur l app, la prochaine connexion WS va fail. Le fail est un await qui ne retourne jamais mais ça semble aussi bloquer l event loop ensuite
+en tout cas pour les memes actions. Une room est créée, elle reste vide car la connexion WS ayant fail on ne continue pas le reste de la connexion à la room. Mais bien qu'elle soit vide elle reste dans le back puisqu'elle est visible depuis un autre user. Pour clean il va
+falloir que le user recree une room (s il a de nouveau acces à l event loop donc pour ca il faut relancer l app entierement).  
+
+1ere ecoute et 2 bugs, deja y a un bug visuel sur la card Next le text prend trop de place en largeur,
+  deuxiemement il y a un gros manque de synchro dans les sons surtout que si le master met pause ca pause
+  pour tout le monde. CHECK bug visuel
+
+La seekBar continue d avancer lorsque la musique est mise en pause. CHECK
+
+Err500 lors du changement de titre mais possiblement lié à la position. CHECK 
+
+Ya toujours un bug avec les WS que quand ca fait trop longtemps il fail la co et ca bug de fou c est lié à un await
+qui attend mais quand meme c est chiant voir si on close ce que ca fait
+
+En changeant la musique avec Play ça relance l'actuelle pendant une demi seconde CHECK
+
+La musique ne se lance pas lorsque la première est terminée CHECK
+
+
+
+
+
+=== A VOIR AVEC LE BACK (bloquant cote front) ===
+
+- Rooms privees pas vraiment privees
+    - GET /rooms renvoie toutes les rooms sans filtre (room_service::list -> find_all) : une room privee est visible par tout le monde.
+      -> ne renvoyer que les rooms publiques + celles dont le user est owner ou a une invitation acceptee (passer claims.user_id a list).
+    - Le WS /rooms/{id}/ws ne verifie pas l acces (handlers/rooms.rs::ws verifie juste que la room existe) : n importe qui peut rejoindre une room privee.
+      -> appeler room_service::check_read_access(&state.pool, &room, claims.user_id) dans ws avant l upgrade.
+    - Cote front rien a changer : un 403 sur le WS fait echouer le join (notif), et la room disparait de la liste.
+
+- Infos d une room sans etre connecte au WS (liste des rooms / vue externe)
+    - Je dois pouvoir voir la musique en cours et la premiere de la queue sans rejoindre la room.
+    - GET /rooms renvoie current_track en simple id (Option<i64>) et pas de queue : le front devrait faire un appel hifi par room pour le titre/cover.
+      -> renvoyer directement current_track en TrackItem (titre, artiste, cover) + next_track (premier element de la queue) dans RoomResponse,
+         comme le fait deja get_room_state_event pour le WS.
+    - GET /rooms/{id}/queue existe mais renvoie les lignes brutes (track_id seulement), donc un appel par room + un appel hifi par track.
+
+- Licence
+    - Le front ne sait pas si le user peut editer la queue (invitation acceptee non exposee) -> ajouter un champ can_edit_queue dans la reponse room.
+      En attendant le front laisse les boutons et affiche le 403 MissingLicense.
+    - Impossible de retirer le droit a quelqu un : /invitations/{id}/revoke existe mais aucune route ne liste les invitations envoyees pour une room.
+    - Le RoomState du WS ne contient pas is_licensed -> les autres clients ne voient pas le changement de licence.
+
+- Invitations
+    - InvitationResponse ne contient que des ids -> ajouter room_name et inviter_username.
+      Le nom d une room privee n est pas lisible avant d accepter (GET /rooms/{id} -> 403), et le front fait un GET /users/{id} par invitation.
+    - Pareil pour GET /friends (un GET /users/{id} par ami) -> renvoyer le username directement.
+
+- Notifications temps reel
+    - Pas de canal par user : le front poll /friends et /me/invitations toutes les 10s.
+      -> soit renvoyer les usernames (voir au dessus) pour alleger le poll, soit un WS /me/ws qui pousse FriendRequest / FriendAccepted / RoomInvitation.
+
+- Playback
+    - played_at est le timestamp envoye par le client (Play / SeekTo / NextTrack) -> decalage d horloge entre appareils.
+      -> utiliser Utc::now() cote serveur dans update_playback_play / update_playback_seek, le client n aurait plus a envoyer de timestamp.
+    - Le check owner du WS est fige a la connexion (owner_id dans handle_socket) : apres un transfert d ownership le nouvel owner doit se reconnecter pour controler la lecture.
+
+- Email
+    - PATCH /users/me/confirm-email est derriere le middleware d auth alors que le token suffit -> si le user n est pas connecte dans l app au clic sur le lien, ca echoue.
+    - Les liens des mails sont en musicroom:// (mobile uniquement). Pour le web il faudrait un lien http vers le front (variable FRONT_URL dans services/email.rs).
+    - SMTP_HOST=mailhog en local : les mails arrivent dans MailHog (http://localhost:8025), pas dans une vraie boite.
+
+- Google login (cote config)
+    - Creer un client OAuth Android dans le projet Google Cloud du back : package com.example.music_room + SHA-1 du keystore de debug de chaque machine.
+    - Cote front il reste : appeler GoogleSignIn.instance.initialize(serverClientId: GOOGLE_CLIENT_ID) et corriger le "if (!data)" dans AuthRepository.loginGoogle.
+    - Web : authenticate() n existe pas en v7, il faut le bouton renderButton de google_sign_in_web + origine autorisee dans la console.

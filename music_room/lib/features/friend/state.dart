@@ -1,4 +1,3 @@
-
 import 'package:music_room/core/model/friend.dart';
 
 class FriendState {

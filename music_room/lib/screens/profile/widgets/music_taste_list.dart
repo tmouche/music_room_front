@@ -11,9 +11,11 @@ class MusicTasteList extends StatelessWidget {
   const MusicTasteList({
     super.key,
     required this._styles,
+    this._visitor = false,
   });
 
-  final List<String> _styles;
+  final List<String>  _styles;
+  final bool          _visitor;
 
     void  _onMusicTasteSettings(BuildContext context) {
     showModalBottomSheet(
@@ -41,7 +43,7 @@ class MusicTasteList extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text("Music Tastes", style: Texting.titleMedium,),
-              IconButton(
+              if (!_visitor) IconButton(
                 onPressed: () => _onMusicTasteSettings(context),
                 icon: Icon(CupertinoIcons.slider_horizontal_3)
               )
@@ -56,7 +58,9 @@ class MusicTasteList extends StatelessWidget {
               itemBuilder: (context, index) => Center(child: StyleCard(style: _styles[index])),
             ),
           ) else Center(
-            child: Text("Go to music tastes settings and add some!!")
+            child: _visitor ? 
+            Text("No Music taste register..")
+            : Text("Go to music tastes settings and add some!!")
           ,),
         ],
       ),

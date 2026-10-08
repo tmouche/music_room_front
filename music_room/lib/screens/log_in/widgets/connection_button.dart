@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
-import 'package:music_room/core/utils/exception.dart';
-import 'package:music_room/core/utils/logger.dart';
+import 'package:music_room/core/notification/notification.dart';
+import 'package:music_room/core/notification/provider.dart';
+import 'package:music_room/core/utils/busy_notifier.dart';
 import 'package:music_room/core/utils/regex.dart';
-import 'package:music_room/core/utils/ui_utils.dart';
+import 'package:music_room/features/auth/controller.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/screens/log_in/provider.dart';
-import 'package:music_room/screens/log_in/widgets/auth_field_controller.dart';
+import 'package:music_room/screens/log_in/widgets/auth_field.dart';
 
 class ConnectionButton extends ConsumerStatefulWidget {
   const ConnectionButton({
@@ -32,117 +33,70 @@ class ConnectionButton extends ConsumerStatefulWidget {
 class _ConnectionButtonState extends ConsumerState<ConnectionButton> {
   bool  _onPasswordReseting = false;
 
-  void _onGeneralError(String log, String message) {
-    logger.debug(log);
-    if (mounted) {
-      UiUtils.showHintBanner(
-        context, 
-        message,
-      );
+  BusyNotifier get _busy => ref.read(loginBusyProvider.notifier);
+  AuthController get _auth => ref.read(authProvider.notifier);
+
+  bool _validate({bool withUsername = false}) {
+    if (widget.emailCtrl.isEmpty) {
+      widget.emailCtrl.shake();
+      return false;
     }
+    if (widget.passwordCtrl.isEmpty) {
+      widget.passwordCtrl.shake();
+      return false;
+    }
+    if (withUsername && widget.usernameCtrl.isEmpty) {
+      widget.usernameCtrl.shake();
+      return false;
+    }
+    return _validateEmailFormat();
   }
 
-  void _onEmailFormatError() {
-    if (mounted) {
-      UiUtils.showHintBanner(
-        context, 
-        'Invalid Email',
-        description: 'The Email format is wrong try something like xxxxxxxx@xxxx.xxx'
-      );
-    }
-  }
-
-  void  _onServerError(String message) {
-      logger.debug(message);
-      if (mounted) UiUtils.showErrorBanner(context, 'Internal Server Error.');
+  bool _validateEmailFormat() {
+    if (isValidEmail(widget.emailCtrl.value)) return true;
+    ref.read(notificationProvider.notifier).hint(
+      'Invalid Email',
+      description: 'The Email format is wrong try something like xxxxxxxx@xxxx.xxx',
+    );
+    return false;
   }
 
   Future<void>  _resetPasswordHandler() async {
     if (_onPasswordReseting) return;
     if (widget.emailCtrl.isEmpty) {
       widget.emailCtrl.shake();
-      return ;
+      return;
     }
-    if (!isValidEmail(widget.emailCtrl.value)) {
-      _onEmailFormatError();
-      return ;
-    }
-    try {
-      await ref.read(loginBusyProvider.notifier).run(
-        () => ref.read(authProvider.notifier).forgotPassword(widget.emailCtrl.value)
-      );
-      if (mounted) setState(() => _onPasswordReseting = true);
-    } catch (exc) {
-      _onServerError('Error LogIn screen reset password: $exc');
-    }
+    if (!_validateEmailFormat()) return;
+
+    final ok = await _busy.run(
+      () => _auth.forgotPassword(widget.emailCtrl.value),
+      label: 'Reset password',
+    );
+    if (ok && mounted) setState(() => _onPasswordReseting = true);
   }
 
   Future<void> _onLogIn() async {
-    if (widget.emailCtrl.isEmpty) {
-      widget.emailCtrl.shake();
-      return ;
-    }
-    if (widget.passwordCtrl.isEmpty) {
-      widget.passwordCtrl.shake();
-      return ;
-    }
-    if (!isValidEmail(widget.emailCtrl.value)) {
-      _onEmailFormatError();
-      return ;
-    }
-    try {
-      await ref.read(loginBusyProvider.notifier).run(
-        () => ref.read(authProvider.notifier).login(
-          widget.emailCtrl.value,
-          widget.passwordCtrl.value
-        )
-      );
-    } on ApiException catch (apiExc) {
-      _onGeneralError(
-        'API Error on log in: $apiExc',
-        apiExc.message
-      );
-    } catch (exc) {
-      _onServerError('Error LogIn screen log in: $exc');
-    }
+    if (!_validate()) return;
+    await _busy.run(
+      () => _auth.login(widget.emailCtrl.value, widget.passwordCtrl.value),
+      label: 'Log in',
+      apiErrorKind: NotificationKind.hint,
+    );
   }
 
   Future<void> _onSignIn() async {
-    if (widget.emailCtrl.isEmpty) {
-      widget.emailCtrl.shake();
-      return ;
-    }
-    if (widget.passwordCtrl.isEmpty) {
-      widget.passwordCtrl.shake();
-      return ;
-    }
-    if (widget.usernameCtrl.isEmpty) {
-      widget.usernameCtrl.shake();
-      return ;
-    }
-    if (!isValidEmail(widget.emailCtrl.value)) {
-      _onEmailFormatError();
-      return ;
-    }
-    try {
-      await ref.read(loginBusyProvider.notifier).run(
-        () => ref.read(authProvider.notifier).signin(
-          widget.usernameCtrl.value,
-          widget.emailCtrl.value,
-          widget.passwordCtrl.value
-        )
-      );
-    } on ApiException catch (apiExc) {
-      _onGeneralError(
-        'API Error on sign in: $apiExc',
-        apiExc.message
-      );
-    } catch (exc) {
-      _onServerError('Error on sign in: $exc');
-    }
-    return ;
+    if (!_validate(withUsername: true)) return;
+    await _busy.run(
+      () => _auth.signin(
+        widget.usernameCtrl.value,
+        widget.emailCtrl.value,
+        widget.passwordCtrl.value,
+      ),
+      label: 'Sign up',
+      apiErrorKind: NotificationKind.hint,
+    );
   }
-
 
   @override
   Widget build(BuildContext context) {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/legacy.dart';
 
 class Coloring {
   const Coloring();
@@ -21,13 +20,6 @@ class Coloring {
   static const onError = Colors.red;
   static const onSuccess = Colors.green;
 
-  static final List<List<Color>> cardColors = [
-    [Color(0xFFEC4899), Color(0xFFEF4444), Color(0xFFF97316)], // pink → red → orange
-    [Color(0xFF3B82F6), Color(0xFF06B6D4), Color(0xFF14B8A6)], // blue → cyan → teal
-    [Color(0xFFA855F7), Color(0xFFEC4899), Color(0xFFEF4444)], // purple → pink → red
-    [Color(0xFF6366F1), Color(0xFFA855F7), Color(0xFFD946EF)], // indigo → purple → fuchsia
-    [Color(0xFF8B5CF6), Color(0xFF6366F1), Color(0xFF3B82F6)], // violet → indigo → blue
-    [Color(0xFFF97316), Color(0xFFEF4444), Color(0xFFEC4899)], // orange → red → pink
-    [Color(0xFF14B8A6), Color(0xFF6366F1), Color(0xFFA855F7)], // teal → indigo → purple
-  ];
+  static const List<Color> defaultCover = [primary, secondary];
+  static const List<Color> roomCard = [Color(0xFF2E3448), Color(0xFF4A3B5C)];
 }

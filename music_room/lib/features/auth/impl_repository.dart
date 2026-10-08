@@ -1,6 +1,5 @@
 import 'package:music_room/core/network/api_client.dart';
 import 'package:music_room/core/network/api_path.dart';
-import 'package:music_room/core/utils/constant.dart' as constant;
 import 'package:music_room/core/utils/exception.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:flutter/foundation.dart';
@@ -11,7 +10,7 @@ class AuthRepository {
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     final data = await ApiClient.post(
-      constant.AUTH_LOGIN_ROUTE,
+      ApiPath.authLogin,
       body: {'email': email, 'password': password},
     );
     if (data == null) {
@@ -28,7 +27,7 @@ class AuthRepository {
 
   Future<Map<String, dynamic>>  fetchUser() async {
     try {
-      final data = await ApiClient.get(constant.USER_ME);
+      final data = await ApiClient.get(ApiPath.userMe);
       if (data == null) {
         logger.error('User response is missing.');
         throw ApiException('No response data');
@@ -71,7 +70,7 @@ class AuthRepository {
       }
 
       final data = await ApiClient.post(
-        constant.AUTH_GOOGLE_LOGIN_ROUTE,
+        ApiPath.authGoogleLogin,
         body: {'id_token': idToken},
       );
       if (!data) {
@@ -88,7 +87,7 @@ class AuthRepository {
   Future<void> logout(String refreshToken) async {
     try {
       await ApiClient.post(
-        constant.AUTH_LOGOUT_ROUTE,
+        ApiPath.authLogout,
         body: {'refresh_token': refreshToken},
       );
     } catch (e) {
@@ -99,7 +98,7 @@ class AuthRepository {
 
   Future<Map<String, dynamic>> signin(String username, String email, String password) async {
       final data = await ApiClient.post(
-        constant.AUTH_REGISTER,
+        ApiPath.authRegister,
         body: {'username': username, 'email': email, 'password': password},
       );
       if (data == null) {
@@ -112,13 +111,12 @@ class AuthRepository {
   Future<void> updateUsername(String newUsername) async {
     try {
       await ApiClient.patch(
-        constant.USER_UPDATE_USERNAME,
+        ApiPath.userUsernameUpdate,
         body: {'username': newUsername}
       );
     } catch (e) {
       // ICI il pourrait avoir un pb de collision il faut donc voir si le back
       // retourne une erreur differente et lancer des Exceptions en concéquence
-      print(e);
       logger.error('Failed to update user Username', error: e);
       throw ApiException('Update Username Operation failed');
     }
@@ -127,7 +125,7 @@ class AuthRepository {
   Future<void> updateEmail(String newEmail) async {
     try {
       await ApiClient.patch(
-        constant.USER_UPDATE_EMAIL,
+        ApiPath.userEmailUpdate,
         body: {'new_email': newEmail}
       );
     } catch (e) {
@@ -141,7 +139,7 @@ class AuthRepository {
   Future<void> updatePassword(String currentPassword, String newPassword) async {
     try {
       await ApiClient.patch(
-        constant.USER_UPDATE_PASSWORD,
+        ApiPath.userPasswordUpdate,
         body: {'current_password': currentPassword, 'new_password': newPassword},
       );
     } catch (e) {
@@ -153,7 +151,7 @@ class AuthRepository {
   Future<void> updateFavoriteGenres(List<String>? favoriteGenres) async {
     try {
       await ApiClient.patch(
-        constant.USER_UPDATE_FAVORITE_GENRES,
+        ApiPath.userFavoriteGenreUpdate,
         body: {'favorite_genres': favoriteGenres}
       );
     } catch (e) {
@@ -165,7 +163,7 @@ class AuthRepository {
   Future<void> updatePrivacyLevel(String privacyLevel) async {
     try {
       await ApiClient.patch(
-        constant.USER_UPDATE_PRIVACY,
+        ApiPath.userPrivacyUpdate,
         body: {'privacy_level': privacyLevel}
       );
     } catch (e) {
@@ -174,18 +172,27 @@ class AuthRepository {
     }
   }
 
-  Future<void>  confirmEmail() async {
+  Future<void>  sendConfirmationEmail() async {
     try {
-      await ApiClient.post(constant.USER_CONFIRM_EMAIL);
+      await ApiClient.post(ApiPath.userConfirmationEmailSend);
     } catch (e) {
-      logger.error('Failed to confirm user email', error: e);
-      throw ApiException('Confirm Email Operation failed');
+      logger.error('Failed to send confirmation email', error: e);
+      throw ApiException('Send Confirmation Email Operation failed');
     }
+  }
+
+  Future<void>  confirmEmail(String token) async {
+    await ApiClient.patch(ApiPath.userEmailConfirm, body: {'token': token});
+  }
+
+  Future<Map<String, dynamic>>  enableSubscription() async {
+    final data = await ApiClient.post(ApiPath.userSubscription);
+    return data as Map<String, dynamic>;
   }
 
   Future<void> forgotPassword(String email) async {
     try {
-      await ApiClient.post(constant.AUTH_FORGOT_PASSWORD_ROUTE, body: {'email': email});
+      await ApiClient.post(ApiPath.authPasswordForgot, body: {'email': email});
     } catch (e) {
       logger.error('Failed to reseting password');
       logger.debug('Details: $e');

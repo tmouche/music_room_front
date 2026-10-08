@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
+import 'package:music_room/core/utils/busy_notifier.dart';
 import 'package:music_room/data/music_taste.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/auth/state.dart';
+import 'package:music_room/screens/profile/provider.dart';
 import 'package:music_room/screens/profile/widgets/style_card.dart';
 
 class MusicTasteModal extends ConsumerStatefulWidget {
@@ -15,21 +17,27 @@ class MusicTasteModal extends ConsumerStatefulWidget {
   ConsumerState<MusicTasteModal> createState() => _MusicTasteModalState();
 }
 
-
 class _MusicTasteModalState extends ConsumerState<MusicTasteModal> {
-
   late AuthState _auth;
 
-  void  _onStyleCardActivation(String style) {
+  BusyNotifier get _busy => ref.read(profileBusyProvider.notifier);
+
+  Future<void>  _onStyleCardActivation(String style) async {
     final newList = _auth.user!.favoriteGenres;
     newList.add(style);
-    ref.read(authProvider.notifier).updateFavoriteGenres(newList);
+    await _busy.run(
+      () => ref.read(authProvider.notifier).updateFavoriteGenres(newList),
+      label: "Update Taste List"
+    );
   }
 
-  void  _onStyleCardDeactivation(String style) {
+  Future<void>  _onStyleCardDeactivation(String style) async {
     final newList = _auth.user!.favoriteGenres;
     newList.remove(style);
-    ref.read(authProvider.notifier).updateFavoriteGenres(newList);
+    await _busy.run(
+      () => ref.read(authProvider.notifier).updateFavoriteGenres(newList),
+      label: "Update Taste List"
+    );
   }
 
   Widget  _buildInteractivStyleCard(String style) {
@@ -61,7 +69,6 @@ class _MusicTasteModalState extends ConsumerState<MusicTasteModal> {
 
   Widget  _buildTasteList() {
     final List<String> styles = allMusicTaste.keys.toList();
-
     return SingleChildScrollView(
       child: Column(
         spacing: Spacing.md,

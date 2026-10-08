@@ -86,6 +86,7 @@ class AuthController extends Notifier<AuthState> {
       googleId: data['google_id'],
       favoriteGenres: __parseFavoriteGenres(data['favorite_genres']),
       privacyLevel: data['privacy_level']?.toString() ?? 'Friends',
+      premiumUser: data['is_subscribed'] ?? false,
     );
   }
 
@@ -105,10 +106,9 @@ class AuthController extends Notifier<AuthState> {
   Future<void> logout() async {
     final refreshToken = await SessionStorage.getRefreshToken();
     final wasAuthenticated = state.isAuthenticated;
-
     state = const AuthState();
     if (wasAuthenticated && refreshToken != null) {
-      _repo.logout(refreshToken);
+      await _repo.logout(refreshToken);
       await SessionStorage.clear();
     }
   }
@@ -118,40 +118,51 @@ class AuthController extends Notifier<AuthState> {
     await _storeAuthenticatedSession(Map<String, dynamic>.from(data as Map));
   }
 
-  void  updateUsername(String newUsername) {
-    unawaited(_repo.updateUsername(newUsername));
+  Future<void>  updateUsername(String newUsername) async {
+    await _repo.updateUsername(newUsername);
 
     User  user = state.user!.copyWith(username: newUsername);
     state = state.copyWith(user: user);
   }
 
-  void  updateEmail(String newEmail) {
-    unawaited(_repo.updateEmail(newEmail));
+  Future<void>  updateEmail(String newEmail) async {
+    await _repo.updateEmail(newEmail);
 
     User  user = state.user!.copyWith(email: newEmail, emailConfirmed: false);
     state = state.copyWith(user: user);
   }
 
-  void  updatePassword(String currentPassword, String newPassword) {
-    unawaited(_repo.updatePassword(currentPassword, newPassword));
+  Future<void>  updatePassword(String currentPassword, String newPassword) async {
+    await _repo.updatePassword(currentPassword, newPassword);
   }
 
-  void  updateFavoriteGenres(List<String>? favoriteGenres) {
-    unawaited(_repo.updateFavoriteGenres(favoriteGenres));
+  Future<void>  updateFavoriteGenres(List<String>? favoriteGenres) async {
+    await _repo.updateFavoriteGenres(favoriteGenres);
 
     User  user = state.user!.copyWith(favoriteGenres: favoriteGenres);
     state = state.copyWith(user: user);
   }
 
-  void  updatePrivacyLevel(String privacyLevel) {
-    unawaited(_repo.updatePrivacyLevel(privacyLevel));
+  Future<void>  updatePrivacyLevel(String privacyLevel) async {
+    await _repo.updatePrivacyLevel(privacyLevel);
 
     User user = state.user!.copyWith(privacyLevel: privacyLevel);
     state = state.copyWith(user: user);
   }
 
-  void  confirmEmail() async {
-    unawaited(_repo.confirmEmail());
+  Future<void>  sendConfirmationEmail() async {
+    await _repo.sendConfirmationEmail();
+    state = state.copyWith(isConfirmationEmailSent: true);
+  }
+
+  Future<void>  confirmEmail(String token) async {
+    await _repo.confirmEmail(token);
+    await loadUser();
+  }
+
+  Future<void>  subscribe() async {
+    final Map<String, dynamic> data = await _repo.enableSubscription();
+    state = state.copyWith(user: _buildUser(data));
   }
 
   Future<void>  forgotPassword(String email) async {

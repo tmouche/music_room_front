@@ -4,11 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
-import 'package:music_room/core/utils/exception.dart';
-import 'package:music_room/core/utils/logger.dart';
-import 'package:music_room/core/utils/ui_utils.dart';
+import 'package:music_room/core/notification/provider.dart';
+import 'package:music_room/core/utils/busy_notifier.dart';
+import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/room/provider.dart';
-import 'package:music_room/screens/log_in/widgets/auth_parameters.dart';
+import 'package:music_room/screens/rooms/provider.dart';
 
 class CreateRoomModal extends ConsumerStatefulWidget {
   const CreateRoomModal({super.key});
@@ -18,11 +18,10 @@ class CreateRoomModal extends ConsumerStatefulWidget {
 }
 
 class _CreateRoomModalState extends ConsumerState<CreateRoomModal> {
-  bool _isLoading = false;
-
   bool _isPublic = true;
   bool _isPrivate = false;
 
+  BusyNotifier get _busy => ref.read(roomsBusyProvider.notifier);
 
   void  _publish() {
     setState(() {
@@ -39,26 +38,25 @@ class _CreateRoomModalState extends ConsumerState<CreateRoomModal> {
   }
 
   Future<void>  _onCreateRoom() async {
-
-    setState(() => _isLoading = true);
-
-    try {
-      await ref.read(roomProvider.notifier).createRoom();
-      if (_isPrivate) {
-        await ref.read(roomProvider.notifier).privatizeRoom();
-      }
-    }  on ApiException catch (e) {
-      logger.debug('Api Error on refresh rooms: $e');
-      if (mounted) UiUtils.showError(context, 'Connection Error');
-    } catch (e) {
-      logger.debug('Error on login password: $e');
-      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        context.pop();
+    await _busy.run(
+      () => ref.read(roomProvider.notifier).onCreateRoom(),
+      label: "Create Room"
+    );
+    final isSub = ref.read(authProvider).user?.premiumUser;
+    if (isSub != null && _isPrivate) {
+      if (isSub) {
+        await _busy.run(
+          () => ref.read(roomProvider.notifier).onPrivatizeRoom(),
+          label: "Privatize Room"
+        );
+      } else {
+         ref.read(notificationProvider.notifier).hint(
+          'To Privatize a Room',
+          description: 'Privatizing a room is a premium feature, if you want to, go to your profile and pay a subscription.',
+        );
       }
     }
+    if (mounted) {context.pop();}
     return ;
   }
 
@@ -71,7 +69,6 @@ class _CreateRoomModalState extends ConsumerState<CreateRoomModal> {
     Color color = isSelected
           ? Coloring.primary.withValues(green: 0.2, blue: 0.5)
           : Coloring.onSurfaceVarient.withValues(alpha: 0.70);
-
     return Container(
       height: 40,
       margin: const EdgeInsets.all(Spacing.xs),
@@ -94,19 +91,49 @@ class _CreateRoomModalState extends ConsumerState<CreateRoomModal> {
     );
   }
 
+  Widget _buildVisibilitySettings() {
+    return Column(
+      children: [
+        Container(
+          alignment: Alignment.centerLeft,
+          child: Text("VISIBILITY", style: Texting.bodyMiddle,),
+        ),
+        SizedBox(
+          child: Row(
+            spacing: Spacing.sm,
+            children: [
+              Expanded(
+                child: _buildVisibilityButtons(
+                  _isPublic,
+                  Icons.public,
+                  'Public',
+                  _publish,
+                )
+              ),
+              Expanded(
+                child: _buildVisibilityButtons(
+                  _isPrivate,
+                  Icons.lock_outline,
+                  'Private',
+                  _private,
+                )
+              ),
+            ]
+          )
+        )
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final busy = ref.watch(roomsBusyProvider);
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(Spacing.md, Spacing.sm, Spacing.md, Spacing.md),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(25),
-          topRight: Radius.circular(25),
-        ),
-        border: Border(top: BorderSide(
-            color: const Color.fromARGB(255, 70, 70, 70),
-          )
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(25),topRight: Radius.circular(25),),
+        border: Border(top: BorderSide(color: const Color.fromARGB(255, 70, 70, 70))
         ),
         color: const Color.fromARGB(255, 18, 18, 18),
       ),
@@ -126,51 +153,16 @@ class _CreateRoomModalState extends ConsumerState<CreateRoomModal> {
             alignment: Alignment.centerLeft,
             child: Text("New Room", style: Texting.titleMedium),
           ),
-          Column(
-            children: [
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Text("VISIBILITY", style: Texting.bodyMiddle,),
-              ),
-              SizedBox(
-                child: Row(
-                  spacing: Spacing.sm,
-                  children: [
-                    Expanded(
-                      child: _buildVisibilityButtons(
-                        _isPublic,
-                        Icons.public,
-                        'Public',
-                        _publish,
-                      )
-                    ),
-                    Expanded(
-                      child: _buildVisibilityButtons(
-                        _isPrivate,
-                        Icons.lock_outline,
-                        'Private',
-                        _private,
-                      )
-                    ),
-                  ]
-                )
-              )
-            ],
-          ),
+          _buildVisibilitySettings(),
           Container(
             height: 45,
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(15),
-              gradient: LinearGradient(
-                colors: [
-                  Coloring.secondary,
-                  Coloring.primary,
-                ]
-              ),
+              gradient: LinearGradient(colors: [Coloring.secondary,Coloring.primary])
             ),
             child: TextButton(
-              onPressed: _isLoading ? null : _onCreateRoom, 
+              onPressed: busy ? null : _onCreateRoom, 
               child: Text(
                 'Create Room',
                 textAlign: TextAlign.center,

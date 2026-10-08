@@ -6,7 +6,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
-import 'package:music_room/screens/log_in/widgets/auth_field_controller.dart';
+
+class AuthFieldController extends ChangeNotifier {
+  final TextEditingController text = TextEditingController();
+
+  String get value => text.text.trim();
+
+  bool get isEmpty => value.isEmpty;
+
+  void clear() => text.clear();
+
+  void shake() => notifyListeners();
+
+  @override
+  void dispose() {
+    text.dispose();
+    super.dispose();
+  }
+}
 
 class AuthField extends ConsumerStatefulWidget {
   const AuthField({

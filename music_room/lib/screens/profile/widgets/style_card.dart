@@ -4,12 +4,12 @@ import 'package:music_room/app/theme/texting.dart';
 import 'package:music_room/data/music_taste.dart';
 
 class StyleCard extends StatelessWidget {
-  const StyleCard({
+  StyleCard({
     super.key,
-    required this.style,
-  });
+    required String style,
+  }) : styleName = style.toLowerCase();
 
-  final String style;
+  final String styleName;
 
   Widget _buildTintedImage(String imgUrl, Color color, BlendMode blendMode) {
     return ColorFiltered(
@@ -24,7 +24,7 @@ class StyleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = allMusicTaste[style]!;
+    final data = allMusicTaste[styleName]!;
     final Color color = data["color"] as Color;
     final String imgUrl = data["img_url"] as String;
 
@@ -59,7 +59,7 @@ class StyleCard extends StatelessWidget {
             bottom: Spacing.sm,
             right: Spacing.sm,
             child: Text(
-              style,
+              styleName,
               style: Texting.titleMiddle,
               overflow: TextOverflow.ellipsis,
             ),

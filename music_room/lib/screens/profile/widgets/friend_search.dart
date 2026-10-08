@@ -12,52 +12,31 @@ import 'package:music_room/widgets/separator.dart';
 class FriendSearch extends ConsumerStatefulWidget {
   const FriendSearch({
     super.key,
-    required this.query
-  });
+    String? query,
+  }) : _query = query ?? "";
 
-  final String query;
+  final String _query;
 
   @override
   ConsumerState<FriendSearch>  createState() => _FriendSearchState();
 } 
-
 
 class _FriendSearchState extends ConsumerState<FriendSearch> {
   List<Friend>  _friends = [];
   List<Friend>  _pendingFriends = [];
 
   @override
-  void initState() {
-    super.initState();
-    _fetch();
-  }
-
-  @override
-  void didUpdateWidget(covariant FriendSearch old) {
-    super.didUpdateWidget(old);
-    if (old.query != widget.query) _fetch();
-  }
-
-  Future<void>  _fetch() async {
-    await ref.read(friendProvider.notifier).refreshFriends();
-    final friends = ref.read(friendProvider);
-    if (widget.query.isEmpty) {
-      setState(() => _friends = friends.acceptedFriends);
-      setState(() => _pendingFriends = friends.pendingRequests);
-      return ;
-    }
-
-    setState(() => _friends = friends.acceptedFriends.where(
-      (f) => f.username != null && f.username!.contains(widget.query)).toList()
-    );
-    setState(() => _pendingFriends = friends.pendingRequests.where(
-      (f) => f.username != null && f.username!.contains(widget.query)).toList()
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
-
+    final friends = ref.watch(friendProvider);
+    if (widget._query.isEmpty) {
+      _friends = friends.acceptedFriends;
+      _pendingFriends = friends.pendingRequests;
+    } else {
+      _friends = friends.acceptedFriends.where(
+        (f) => f.username != null && f.username!.contains(widget._query)).toList();
+      _pendingFriends = friends.pendingRequests.where(
+        (f) => f.username != null && f.username!.contains(widget._query)).toList();
+    }
     return SingleChildScrollView(
       child: Column(
         children: [

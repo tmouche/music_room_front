@@ -3,26 +3,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
-import 'package:music_room/core/utils/exception.dart';
+import 'package:music_room/core/utils/busy_notifier.dart';
 import 'package:music_room/core/utils/extention.dart';
-import 'package:music_room/core/utils/logger.dart';
-import 'package:music_room/core/utils/ui_utils.dart';
 
-class SearchModal extends ConsumerStatefulWidget {
+final searchBusyProvider = NotifierProvider.autoDispose<BusyNotifier, bool>(BusyNotifier.new);
+
+class SearchModal<T> extends ConsumerStatefulWidget {
   const SearchModal({
     super.key,
-    required this.topic,
-    required this.contentBuilder,
+    required this._topic,
+    required this._contentBuilder,
+    this._toSearch,
   });
 
-  final String                           topic;
-  final Widget  Function(String query)  contentBuilder;
+  final String                              _topic;
+  final Widget  Function({T? content})      _contentBuilder;
+  final Future<T> Function(String query)?   _toSearch;
 
   @override
-  ConsumerState<SearchModal> createState() => _SearchModalState();
+  ConsumerState<SearchModal<T>> createState() => _SearchModalState<T>();
 }
 
-class _SearchModalState extends ConsumerState<SearchModal> {
+class _SearchModalState<T> extends ConsumerState<SearchModal<T>> {
   bool    _isLoading = false;
   Widget  _searchedList = SizedBox();
   String  _query = '';
@@ -36,38 +38,39 @@ class _SearchModalState extends ConsumerState<SearchModal> {
   }
 
   void  _resetContent() {
-    if (mounted) setState(() => _searchedList = widget.contentBuilder(''));
+    if (mounted) setState(() => _searchedList = widget._contentBuilder(content: null));
   }
 
   Future<void>  _onSearch() async {
     final String searchFor = _searchController.text;
-    
     if (searchFor.trim().isEmpty) {
       _resetContent();
       return ;
     }
     setState(() => _query = searchFor);
-
-    try {
-      setState(() => _isLoading = true);
-      final myWidget = widget.contentBuilder(_query);
-      if (mounted) setState(() => _searchedList = myWidget);
-    } on ApiException catch (e) {
-      logger.debug('Api Error on searching tracks: $e');
-      if (mounted) {
-        UiUtils.showError(context, 'Connection Error');
-        setState(() => _searchedList = SizedBox());
-      }
-    } catch (e) {
-      logger.debug('Error on searching tracks: $e');
-      if (mounted) {
-        UiUtils.showError(context, 'Internal Server Error.');
-        setState(() => _searchedList = SizedBox());
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+    Widget  myWidget;
+    if (widget._toSearch == null) {
+      myWidget = _onSearchOut();
+    } else {
+      myWidget = await _onSearchIn();
     }
+    if (mounted) setState(() => _searchedList = myWidget);
     return ;
+  }
+
+  Widget _onSearchOut() {
+    return widget._contentBuilder(content: _query as T);
+  }
+
+  Future<Widget>  _onSearchIn() async {
+    setState(() => _isLoading = true);
+      final T? result = await ref.read(searchBusyProvider.notifier).fetch(
+      () => widget._toSearch!(_query),
+      label: 'Search for ${widget._topic} failed',
+    );
+    if (mounted) setState(() => _isLoading = false);
+    if (result == null) return SizedBox();
+    return widget._contentBuilder(content: result);
   }
 
   @override
@@ -90,7 +93,7 @@ class _SearchModalState extends ConsumerState<SearchModal> {
               cursorWidth: 1,
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.search, color: Coloring.onSurfaceVarient.withValues(alpha: 0.30)),
-                hintText: "Search ${widget.topic.toLowerCase()}",
+                hintText: "Search ${widget._topic.toLowerCase()}",
                 hintStyle: Texting.bodyMedium,
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(width: 2, color: Coloring.borderFocused),
@@ -172,7 +175,7 @@ class _SearchModalState extends ConsumerState<SearchModal> {
                   ),
                   Container(
                     alignment: Alignment.centerLeft,
-                    child: Text(widget.topic.capitalizeFirst(), style: Texting.titleMedium),
+                    child: Text(widget._topic.capitalizeFirst(), style: Texting.titleMedium),
                   ),
                   _buildSearchBar(),
                 ],

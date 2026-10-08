@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/core/model/room.dart';
 import 'package:music_room/core/model/room_user.dart';
-import 'package:music_room/core/model/track.dart';
 import 'package:music_room/data/fake_room.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/room/impl_repository.dart';
@@ -173,18 +172,6 @@ class MockRoomRepository extends RoomRepository {
       }
     };
   }
-
-  @override
-  Future<void> startTrack(Track newTrack, Duration position) async {}
-
-  @override
-  Future<Track?> getTrack(int trackId) async {}
-
-  @override
-  Future<void> createChannel(String roomId, String token) async {}
-
-  @override
-  Future<void> deleteChannel() async {}
 
   @override
   Future<String> getStreamUrl(int trackId) async {

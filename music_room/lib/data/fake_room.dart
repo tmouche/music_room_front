@@ -1,6 +1,7 @@
-import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/core/model/queue_item.dart';
 import 'package:music_room/core/model/room.dart';
+import 'package:music_room/core/model/room_user.dart';
+import 'package:music_room/data/fake_db.dart';
 import 'package:music_room/data/fake_room_user.dart';
 import 'package:music_room/data/fake_track.dart';
 
@@ -13,7 +14,7 @@ QueueItem queueItem3 = QueueItem(id: '3', roomId: '1', trackId: 4, position: 3, 
 var fakeRoom1 = Room(
   id: '1',
   name: 'Fake Vibes 1',
-  owner: fakeUser1.username,
+  owner: fakeUser1.id,
   listeners: [
     fakeUser1,
     fakeUser2,
@@ -27,71 +28,69 @@ var fakeRoom1 = Room(
     queueItem3,
   ],
   currentTrack: fakeTrack5,
-  gradientColor: Coloring.cardColors[1],
 );
 
+// Owned by the logged-in mock account, to reach the owner view.
 var fakeRoom2 = Room(
   id: '2',
   name: 'Fake Vibes 2',
-  owner: fakeUser2.username,
+  owner: FakeDb.currentUserId,
   listeners: [
+    RoomUser(
+      id: FakeDb.currentUserId,
+      username: FakeDb.instance.currentUser.username,
+    ),
     fakeUser2,
   ],
   currentTrack: fakeTrack5,
-  gradientColor: Coloring.cardColors[2],
 );
 
 var fakeRoom3 = Room(
   id: '3',
   name: 'Fake Vibes 3',
-  owner: fakeUser2.username,
+  owner: fakeUser2.id,
   listeners: [
     fakeUser2,
   ],
   currentTrack: fakeTrack5,
-  gradientColor: Coloring.cardColors[3],
 );
 
 var fakeRoom4 = Room(
   id: '4',
   name: 'Fake Vibes 4',
-  owner: fakeUser2.username,
+  owner: fakeUser2.id,
   listeners: [
     fakeUser2,
   ],
   currentTrack: fakeTrack5,
-  gradientColor: Coloring.cardColors[4],
 );
 
 var fakeRoom5 = Room(
   id: '5',
   name: 'Fake Vibes 5',
-  owner: fakeUser2.username,
+  owner: fakeUser2.id,
   listeners: [
     fakeUser2,
   ],
   currentTrack: fakeTrack5,
-  gradientColor: Coloring.cardColors[5],
 );
 
 var fakeRoom6 = Room(
   id: '6',
   name: 'Fake Vibes 6',
-  owner: fakeUser2.username,
+  owner: fakeUser2.id,
   listeners: [
     fakeUser2,
   ],
   currentTrack: fakeTrack5,
-  gradientColor: Coloring.cardColors[6],
 );
 
 var fakeRoom7 = Room(
   id: '7',
   name: 'Fake Vibes 7',
-  owner: fakeUser2.username,
+  owner: fakeUser2.id,
   listeners: [
     fakeUser2,
   ],
   currentTrack: fakeTrack5,
-  gradientColor: Coloring.cardColors[6],
 );

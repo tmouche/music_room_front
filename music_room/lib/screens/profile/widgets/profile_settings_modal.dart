@@ -1,6 +1,4 @@
 
-import 'dart:ui';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,10 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
-import 'package:music_room/core/utils/exception.dart';
-import 'package:music_room/core/utils/logger.dart';
-import 'package:music_room/core/utils/ui_utils.dart';
+import 'package:music_room/core/utils/busy_notifier.dart';
 import 'package:music_room/features/auth/provider.dart';
+import 'package:music_room/screens/profile/provider.dart';
 import 'package:music_room/widgets/separator.dart';
 
 class ProfileSettingsModal extends ConsumerStatefulWidget {
@@ -23,7 +20,6 @@ class ProfileSettingsModal extends ConsumerStatefulWidget {
 
 class _ProfileSettingsModal extends ConsumerState<ProfileSettingsModal> {
   bool          hasChanged = false;
-  bool          isLoading = false;
   late String   privacyLevel; 
 
   late String _initialUsername;
@@ -38,6 +34,8 @@ class _ProfileSettingsModal extends ConsumerState<ProfileSettingsModal> {
   static const String publicPrivacy = 'Public';
   static const String friendsPrivacy = 'Friends'; 
   static const String privatePrivacy = 'Private'; 
+
+  BusyNotifier get _busy => ref.read(profileBusyProvider.notifier);
 
   @override
   void initState() {
@@ -55,57 +53,42 @@ class _ProfileSettingsModal extends ConsumerState<ProfileSettingsModal> {
   }
 
   Future<void>  _onSaveUsername(String newUsername) async {
-    try {
-      ref.read(authProvider.notifier).updateUsername(newUsername);
-    } on ApiException catch (e) {
-      logger.debug('API Error on username changement: $e');
-      if (mounted) UiUtils.showError(context, 'Username Changement, Server Error.');
-    } catch (e) {
-      logger.debug('Error on username changement: $e');
-      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
-    }
+    await _busy.run(
+      () => ref.read(authProvider.notifier).updateUsername(newUsername),
+      label: 'Update Username',
+    );
   }
 
   Future<void>  _onSaveEmail(String newEmail) async {
-    try {
-      ref.read(authProvider.notifier).updateEmail(newEmail);
-    } on ApiException catch (e) {
-      logger.debug('API Error on username changement: $e');
-      if (mounted) UiUtils.showError(context, 'Username Changement, Server Error.');
-    } catch (e) {
-      logger.debug('Error on username changement: $e');
-      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
-    }
+    await _busy.run(
+      () => ref.read(authProvider.notifier).updateEmail(newEmail),
+      label: 'Update Username',
+    );
   }
 
   Future<void>  _onSavePassword(String currentPassword, String newPassword) async {
-    try {
-      ref.read(authProvider.notifier).updatePassword(currentPassword, newPassword);
-    } on ApiException catch (e) {
-      logger.debug('API Error on username changement: $e');
-      if (mounted) UiUtils.showError(context, 'Username Changement, Server Error.');
-    } catch (e) {
-      logger.debug('Error on username changement: $e');
-      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
-    }
+    await _busy.run(
+      () => ref.read(authProvider.notifier).updatePassword(currentPassword, newPassword),
+      label: 'Update Username',
+    );
   }
 
-  Future<void>  _onSavePrivacy() async {}
+  Future<void>  _onSavePrivacy() async {
+    await _busy.run(
+      () => ref.read(authProvider.notifier).updatePrivacyLevel(privacyLevel),
+      label: 'Updata Privacy Level'
+    );
+  }
   
   Future<void>  _onSave() async {
     final String newUsername = _usernameController.text.trim();
     final String newEmail = _emailController.text.trim();
     final String currentPassword = _passwordNewController.text.trim();
     final String newPassword = _passwordNewController.text.trim();
-    setState(() => isLoading = true);
-    try {
-      if (newUsername != _initialUsername) {await _onSaveUsername(newUsername);}
-      if (newEmail != _initialEmail) {await _onSaveEmail(newEmail);}
-      if (currentPassword.isNotEmpty && newPassword.isNotEmpty) {await _onSavePassword(currentPassword, newPassword);}
-      if (privacyLevel != _initialPrivacy) {await _onSavePrivacy();}
-    } finally {
-      if (mounted) setState(() => isLoading = false);
-    }
+    if (newUsername != _initialUsername) {await _onSaveUsername(newUsername);}
+    if (newEmail != _initialEmail) {await _onSaveEmail(newEmail);}
+    if (currentPassword.isNotEmpty && newPassword.isNotEmpty) {await _onSavePassword(currentPassword, newPassword);}
+    if (privacyLevel != _initialPrivacy) {await _onSavePrivacy();}
   }
 
   void  _onFieldChanged() {
@@ -243,8 +226,9 @@ class _ProfileSettingsModal extends ConsumerState<ProfileSettingsModal> {
     required String description,
     required bool isChoosed
   }) {
+    final busy = ref.watch(profileBusyProvider);
     return TextButton(
-      onPressed: onTap,
+      onPressed: busy ? null : onTap,
       style: TextButton.styleFrom(
         padding: EdgeInsets.zero,
         minimumSize: Size.zero,

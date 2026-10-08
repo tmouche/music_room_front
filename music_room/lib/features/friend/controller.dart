@@ -1,6 +1,6 @@
 
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:music_room/core/model/friend.dart';
 import 'package:music_room/core/utils/logger.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/auth/state.dart';
@@ -12,32 +12,23 @@ class FriendController extends Notifier<FriendState> {
   
   @override
   FriendState build() {
-    _auth = ref.read(authProvider);
-    _repo = ref.read(friendRepositoryProvider);
-    final friendState = FriendState();
-    refreshFriends();
-    return friendState;
+    final userId = ref.watch(authProvider.select((s) => s.user?.id));
+    if (userId != null) _refreshFriendsInBackground();
+    return FriendState();
   }
 
-  late final AuthState        _auth;
-  late final FriendRepository _repo;
-
-  Future<List<Friend>>  getFriends() async {
-    await refreshFriends();
-    return state.friends;
-  }
+  AuthState get         _auth => ref.read(authProvider);
+  FriendRepository get  _repo => ref.read(friendRepositoryProvider);
 
   Future<void>  refreshFriends() async {
-    List<Friend>  friends = [];
-    try {
-      final userId = _auth.user!.id;
-      friends = await _repo.getFriends(userId);
-    } catch (e) {
-      logger.debug("Fail to fetch Friends");
-      rethrow ;
-    } finally {
-      state = state.copyWith(friends: friends);
-    }
+    final friends = await _repo.getFriends(_auth.user!.id);
+    state = state.copyWith(friends: friends);
+  }
+
+  void  _refreshFriendsInBackground() {
+    unawaited(refreshFriends().catchError((Object e) {
+      logger.debug('Fail to fetch Friends: $e');
+    }));
   }
 
   Future<void>  addFriend(String username) async {
@@ -60,6 +51,7 @@ class FriendController extends Notifier<FriendState> {
   }
 
   Future<void>  rejectFriendInvite(String userId) async {
-    return await _repo.rejectFriendInvite(userId);
+    await _repo.rejectFriendInvite(userId);
+    await refreshFriends();
   }
 }

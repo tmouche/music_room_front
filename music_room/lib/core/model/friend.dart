@@ -38,3 +38,9 @@ class Friend {
     );
   }
 }
+
+enum FriendStatus {
+  pending,
+  friend,
+  unknown,
+}

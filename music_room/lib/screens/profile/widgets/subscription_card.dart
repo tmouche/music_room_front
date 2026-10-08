@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
+import 'package:music_room/core/utils/busy_notifier.dart';
+import 'package:music_room/features/auth/provider.dart';
+import 'package:music_room/screens/profile/provider.dart';
 
 class SubscriptionCard extends ConsumerStatefulWidget {
   const SubscriptionCard({super.key});
@@ -12,16 +15,18 @@ class SubscriptionCard extends ConsumerStatefulWidget {
 }
 
 class _SubscriptionCardState extends ConsumerState<SubscriptionCard> {
-  bool _isLoading = false;
+  BusyNotifier get _busy => ref.read(profileBusyProvider.notifier);
 
   Future<void>  _onSub() async {
-    setState(() => _isLoading = true);
-    setState(() => _isLoading = false);
-    return ;
+    await _busy.run(
+      () => ref.read(authProvider.notifier).subscribe(),
+      label: 'Subscribe',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final busy = ref.watch(profileBusyProvider);
     return Container(
       padding: EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
@@ -39,7 +44,7 @@ class _SubscriptionCardState extends ConsumerState<SubscriptionCard> {
                 Text("Premium Subsciption", style: Texting.titleMiddle.copyWith(color: Coloring.tertiary)),
                 Text("Subscribe to the premium version to private room", style: Texting.bodyMedium),
                 TextButton(
-                  onPressed: _isLoading ? null : _onSub,
+                  onPressed: busy ? null : _onSub,
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                   ),

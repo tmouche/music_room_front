@@ -4,23 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
-import 'package:music_room/core/utils/exception.dart';
-import 'package:music_room/core/utils/logger.dart';
-import 'package:music_room/core/utils/ui_utils.dart';
+import 'package:music_room/core/notification/notification.dart';
+import 'package:music_room/core/utils/busy_notifier.dart';
 import 'package:music_room/features/auth/provider.dart';
 import 'package:music_room/features/friend/provider.dart';
+import 'package:music_room/features/room/provider.dart';
+import 'package:music_room/screens/profile/provider.dart';
 import 'package:music_room/screens/profile/widgets/confirm_email_card.dart';
 import 'package:music_room/screens/profile/widgets/friend_card.dart';
-import 'package:music_room/screens/profile/widgets/friend_search_card.dart';
 import 'package:music_room/screens/profile/widgets/friend_search.dart';
 import 'package:music_room/screens/profile/widgets/music_taste_list.dart';
 import 'package:music_room/screens/profile/widgets/profile_settings_modal.dart';
 import 'package:music_room/screens/profile/widgets/subscription_card.dart';
 import 'package:music_room/widgets/music_room_logo.dart';
-import 'package:music_room/screens/profile/widgets/music_taste_modal.dart';
 import 'package:music_room/widgets/search_modal.dart';
 import 'package:music_room/widgets/separator.dart';
-import 'package:music_room/screens/profile/widgets/style_card.dart';
 import 'package:music_room/screens/profile/widgets/user_logo.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -31,7 +29,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
-  bool _isLoading = false;
+  BusyNotifier get _busy => ref.read(profileBusyProvider.notifier);
 
   void  _onSettings() {
     showModalBottomSheet(
@@ -41,32 +39,23 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  void  _onFriendsSettings() async {
+  void  _onFriendsSettings() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (_) => SearchModal(
         topic: "Friends",
-        contentBuilder: (query) => FriendSearch(query: query)
+        contentBuilder: ({String? content}) => FriendSearch(query: content),
       )
     );
   }
 
   Future<void>  _onLogOut() async {
-    setState(() => _isLoading = true);
-
-    try {
-      ref.read(authProvider.notifier).logout();
-    } on ApiException catch (e) {
-      logger.debug('API Error on logout: $e');
-      if (mounted) UiUtils.showError(context, 'LogOut Failed, Server Error.');
-    } catch (e) {
-      logger.debug('Error logout: $e');
-      if (mounted) UiUtils.showError(context, 'Internal Server Error.');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-
+    await _busy.run(() => ref.read(roomProvider.notifier).onLeaveRoom());
+    await _busy.run(() => ref.read(authProvider.notifier).logout(),
+      label: 'LogOut',
+      apiErrorKind: NotificationKind.error
+    );
     return ;
   }
 
@@ -79,7 +68,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ],
     );
   }
-
 
   Widget  _buildNameBox() {
     final authState = ref.read(authProvider);
@@ -104,7 +92,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 children: [
                   Text(authState.user!.username, style: Texting.titleMedium),
                   Text(authState.user!.email!, style: Texting.bodyMedium),
-                ],)
+                ],
+              )
             ],
           ),
           Row(
@@ -131,7 +120,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Widget  _buildFriendList() {
-    final friendsList = ref.watch(friendProvider).friends;
+    final friendsList = ref.watch(friendProvider).acceptedFriends;
     return Container(
       padding: EdgeInsets.all(Spacing.sm2),
       decoration: BoxDecoration(
@@ -171,8 +160,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Widget  _buildLogOut() {
+    final busy = ref.watch(profileBusyProvider);
     return TextButton(
-      onPressed: _isLoading ? null : _onLogOut,
+      onPressed: busy ? null : _onLogOut,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         spacing: Spacing.sm,
@@ -186,9 +176,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.read(authProvider);
-    final styles = authState.user!.favoriteGenres;
-
+    final styles = ref.watch(authProvider.select((s) => s.user?.favoriteGenres));
+    if (styles == null) return SizedBox.shrink();
     return Scaffold(
       backgroundColor: Coloring.surfacePrimary,
       body: SafeArea(
@@ -199,7 +188,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             children: [
               _buildHeader(),
               _buildNameBox(),
-              MusicTasteList(styles: styles,),
+              MusicTasteList(styles: styles),
               _buildFriendList(),
               _buildLogOut(),
             ],

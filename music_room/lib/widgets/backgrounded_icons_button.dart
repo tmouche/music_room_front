@@ -45,7 +45,7 @@ class BackgroundedIconsButton extends ConsumerWidget {
 class SpinningBackgroundedIconButton extends StatefulWidget {
   const SpinningBackgroundedIconButton({
     super.key,
-    required this.onPressed,
+    this.onPressed,
     required this.icon,
     this.bgColor = Coloring.onSurfaceVarientMuted,
     this.iconColor = Coloring.onSurface,
@@ -55,7 +55,7 @@ class SpinningBackgroundedIconButton extends StatefulWidget {
   });
   
   final Color bgColor;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final IconData icon;
   final Color iconColor;
   final double? iconSize;

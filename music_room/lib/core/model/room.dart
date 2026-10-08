@@ -1,14 +1,6 @@
-import 'dart:math';
-import 'package:flutter/material.dart';
-import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/core/model/queue_item.dart';
 import 'package:music_room/core/model/room_user.dart';
 import 'package:music_room/core/model/track.dart';
-
-List<Color> giveRandomCardColor() {
-  var random = Random();
-  return Coloring.cardColors[random.nextInt(Coloring.cardColors.length)];
-}
 
 class Room {
   Room({
@@ -22,9 +14,8 @@ class Room {
     this._queue = const [],
     this._status = 0,
     this._currentTrack,
-    List<Color>? gradientColor,
     DateTime? updatedAt,
-  }) : _updatedAt = updatedAt ?? DateTime.now().toUtc(), _gradientColor = gradientColor ?? giveRandomCardColor();
+  }) : _updatedAt = updatedAt ?? DateTime.now().toUtc();
 
   final String          _id;
   final String          _name;
@@ -36,7 +27,6 @@ class Room {
   final List<QueueItem> _queue;
   final int             _status;
   final Track?          _currentTrack;
-  final List<Color>?    _gradientColor;
   final DateTime?       _updatedAt;
 
   String get id => _id;
@@ -44,7 +34,6 @@ class Room {
   Track? get currentTrack => _currentTrack;
   String get owner => _owner;
   List<QueueItem> get queue => _queue;
-  List<Color>? get gradientColor => _gradientColor;
   List<RoomUser> get listeners => _listeners;
   bool get isPublic => _isPublic;
   bool get isLicensed => _isLicensed;
@@ -78,7 +67,6 @@ class Room {
     List<QueueItem>? queue,
     int? status,
     Object? currentTrack = _unset,
-    List<Color>? gradientColor,
     DateTime? updatedAt,
   }) {
     return Room(
@@ -92,7 +80,6 @@ class Room {
       queue: queue ?? _queue,
       status: status ?? _status,
       currentTrack:  identical(currentTrack, _unset) ? _currentTrack : currentTrack as Track?,
-      gradientColor: gradientColor ?? _gradientColor,
       updatedAt: updatedAt ?? _updatedAt,
     );
   }

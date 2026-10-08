@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:music_room/app/theme/coloring.dart';
 
 final allMusicTaste = {
   "electro": {

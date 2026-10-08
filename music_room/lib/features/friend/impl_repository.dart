@@ -41,7 +41,7 @@ class FriendRepository {
   }
 
   Future<void>  rejectFriendInvite(String userId) async {
-    await ApiClient.post(ApiPath.friendsInviteReject(userId));
+    await ApiClient.delete(ApiPath.friendsInviteReject(userId));
   }
 
 }

@@ -5,6 +5,7 @@ import 'package:music_room/app/theme/coloring.dart';
 import 'package:music_room/app/theme/spacing.dart';
 import 'package:music_room/app/theme/texting.dart';
 import 'package:music_room/core/model/room.dart';
+import 'package:music_room/features/room/provider.dart';
 import 'package:shimmer/shimmer.dart';
 
 class RoomCard extends ConsumerStatefulWidget {
@@ -21,6 +22,14 @@ class RoomCard extends ConsumerStatefulWidget {
 
 class _RoomCardState extends ConsumerState<RoomCard> { 
 
+  void  _onTap() {
+    if (widget.room.id == ref.read(roomProvider).currentRoom?.id) {
+      context.go('/myRoom');
+      return ;
+    }
+    context.pushReplacement('/rooms/${widget.room.id}', extra: widget.room);
+  }
+
   @override
   Widget build(BuildContext context) {
     return TextButton(
@@ -28,7 +37,7 @@ class _RoomCardState extends ConsumerState<RoomCard> {
         padding: EdgeInsets.zero,
         minimumSize: Size.zero
       ),
-      onPressed: () => context.pushReplacement('/rooms/${widget.room.id}', extra: widget.room),
+      onPressed: _onTap,
       child: Container(
         width: double.infinity,
         height: 200,
@@ -38,7 +47,7 @@ class _RoomCardState extends ConsumerState<RoomCard> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: widget.room.gradientColor!
+            colors: Coloring.roomCard
           ),
           borderRadius: BorderRadius.circular(12),
         ),
